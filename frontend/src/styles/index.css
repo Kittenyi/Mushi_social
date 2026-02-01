@@ -220,7 +220,7 @@
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 .pb-nav {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 .min-h-mobile {
   min-height: 100dvh;

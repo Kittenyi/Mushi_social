@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { UsersRound, Activity, Star, MapPin } from 'lucide-react';
-import { NavBar } from '../components/layout/NavBar';
 import { fetchSoulByAddress } from '../lib/soulApi';
 import { useProfileStore } from '../stores/useProfileStore';
 import { clearOnboardingDone } from '../lib/onboarding';
@@ -98,11 +97,18 @@ export function SettingsPage() {
   const genderOption = GENDER_OPTIONS.find((o) => o.id === gender);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background profile-page pb-nav">
-      {/* 顶部：标题、MUSHI pill、主题/编辑 */}
+    <div className="flex min-h-screen flex-col bg-background profile-page pb-safe">
+      {/* 顶部：标题、MUSHI pill（点击回地图）、主题/编辑；此页不显示底部导航，避免遮挡 2x2 网格 */}
       <header className="flex items-center justify-between p-4 pt-safe">
         <div className="w-10" />
-        <span className="profile-app-pill">MUSHI</span>
+        <button
+          type="button"
+          onClick={() => navigate('/map')}
+          className="profile-app-pill cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
+          aria-label="Back to map"
+        >
+          MUSHI
+        </button>
         <div className="flex items-center gap-2">
           <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Edit profile" onClick={() => setShowEdit((v) => !v)} aria-label="Edit profile">✏️</button>
         </div>
@@ -277,8 +283,8 @@ export function SettingsPage() {
           </button>
         </div>
 
-        {/* 设置卡片：钱包 / 幽灵模式 / 分享 / 引导 */}
-        <section className="w-full max-w-sm profile-status-card overflow-hidden mb-4">
+        {/* 设置卡片：钱包 / 幽灵模式 / 分享 / 引导（底部留白，无导航栏） */}
+        <section className="w-full max-w-sm profile-status-card overflow-hidden mb-6 pb-4">
           <p className="px-4 py-3 text-white/60 text-xs font-medium border-b border-white/10">Settings</p>
 
           <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
@@ -359,7 +365,7 @@ export function SettingsPage() {
         )}
       </div>
 
-      <NavBar />
+      {/* 个人简介页不显示底部导航，避免遮挡 2x2 网格；点击顶部 MUSHI 返回地图 */}
     </div>
   );
 }
