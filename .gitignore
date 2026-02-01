@@ -1,0 +1,24 @@
+node_modules
+.env
+.env.local
+.DS_Store
+*.log
+dist
+build
+coverage
+
+# Frontend
+frontend/dist
+frontend/build
+frontend/.env
+
+# Backend
+backend/uploads
+backend/dist
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+cursor.json

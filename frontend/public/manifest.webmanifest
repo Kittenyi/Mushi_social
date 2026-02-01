@@ -1,0 +1,20 @@
+{
+  "name": "Mushi - 你的灵魂，长成蘑菇",
+  "short_name": "Mushi",
+  "description": "Web3 社交地图 · 基于位置的灵魂社交",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
