@@ -45,37 +45,43 @@ export function ChatDetailPage() {
   };
 
   return (
-    <div className="min-h-screen text-white flex flex-col pb-20 chat-page-bg">
+    <div className="flex min-h-screen flex-col bg-background pb-nav chat-page-bg">
       <header className="flex items-center gap-3 p-4 pt-safe chat-header-glow">
         <button
           type="button"
           onClick={() => navigate('/chat')}
-          className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 flex items-center justify-center transition-colors"
+          className="touch-target w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition-colors"
+          aria-label="Back to chat list"
         >
           ←
         </button>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 flex items-center justify-center text-xl border border-white/10">
+        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl border border-white/10">
           🍄
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium truncate text-white">{peerName}</p>
-          {isReady ? (
-            <span className="chat-pill chat-pill-ok text-xs">Real-time</span>
-          ) : (
-            <span className="chat-pill chat-pill-loading text-xs">Connect wallet</span>
-          )}
+          <h1 className="mb-0 text-2xl font-bold truncate">{peerName}</h1>
+          <p className="text-xl text-muted-foreground">{isReady ? 'Real-time' : 'Connect wallet'}</p>
         </div>
       </header>
 
       <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {!isReady && (
-          <p className="text-white/50 text-sm">Connect your wallet to send and receive messages here.</p>
+          <div className="text-center">
+            <h2 className="mb-4 text-4xl font-bold">Connect wallet</h2>
+            <p className="text-xl text-muted-foreground">Connect your wallet to send and receive messages here.</p>
+          </div>
         )}
         {isReady && !peerAddress && (
-          <p className="text-white/50 text-sm">Open a chat from the list or Profile → Say hi!</p>
+          <div className="text-center">
+            <h2 className="mb-4 text-4xl font-bold">Open a chat</h2>
+            <p className="text-xl text-muted-foreground">Open a chat from the list or Profile → Say hi!</p>
+          </div>
         )}
         {isReady && peerAddress && messages.length === 0 && (
-          <p className="text-white/40 text-sm">No messages yet. Say hi!</p>
+          <div className="text-center">
+            <h2 className="mb-4 text-4xl font-bold">No messages yet</h2>
+            <p className="text-xl text-muted-foreground">Say hi!</p>
+          </div>
         )}
         {isReady && peerAddress && messages.length > 0 && messages.map((m) => (
           <div
@@ -105,7 +111,7 @@ export function ChatDetailPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="flex-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 text-white placeholder:text-white/40 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+            className="flex-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 text-foreground placeholder:text-muted-foreground outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
           />
           <button
             type="button"

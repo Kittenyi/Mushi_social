@@ -22,3 +22,7 @@ backend/dist
 *.swp
 *.swo
 cursor.json
+
+# Accidental / local
+frontend/auracity-frontend@0.1.0
+frontend/vite

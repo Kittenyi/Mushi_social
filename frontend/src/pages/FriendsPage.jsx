@@ -13,17 +13,18 @@ export function FriendsPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen text-white flex flex-col pb-20" style={{ background: 'linear-gradient(165deg, #1a0a2e 0%, #0f0f1a 50%, #0f0f1a 100%)' }}>
+    <div className="flex min-h-screen flex-col bg-background pb-nav">
       <header className="flex items-center gap-3 p-4 pt-safe border-b border-white/10">
         <button
           type="button"
           onClick={() => navigate('/map')}
-          className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xl transition-colors"
+          className="touch-target w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xl"
+          aria-label="Back to map"
         >
           ←
         </button>
-        <span className="text-white/60 text-sm">Map</span>
-        <h1 className="flex-1 text-lg font-semibold text-white">Friends</h1>
+        <h1 className="flex-1 mb-0 text-4xl font-bold">Friends</h1>
+        <p className="text-xl text-muted-foreground">Map</p>
       </header>
 
       <div className="flex-1 p-4">

@@ -5,17 +5,16 @@ import { NavBar } from '../components/layout/NavBar';
 
 export function NotificationsPage() {
   return (
-    <div
-      className="min-h-screen text-white flex flex-col pb-20"
-      style={{
-        background: 'linear-gradient(165deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
-      }}
-    >
+    <div className="flex min-h-screen flex-col bg-background pb-nav">
       <header className="p-4 pt-safe">
-        <h1 className="text-xl font-semibold">通知</h1>
-        <p className="text-white/50 text-sm mt-1">好友请求、新消息等</p>
+        <h1 className="mb-4 text-4xl font-bold">Notifications</h1>
+        <p className="text-xl text-muted-foreground">Friend requests, new messages, etc.</p>
       </header>
-      <div className="flex-1 px-6 text-white/40 text-sm">暂无通知</div>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="text-center">
+          <p className="text-xl text-muted-foreground">No notifications yet</p>
+        </div>
+      </div>
       <NavBar />
     </div>
   );

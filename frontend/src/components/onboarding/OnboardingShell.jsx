@@ -6,7 +6,7 @@ import { StepIndicator } from './StepIndicator';
 export function OnboardingShell({ step, showSteps = true, children }) {
   return (
     <div
-      className="min-h-screen w-full flex flex-col bg-mush-night"
+      className="min-h-mobile w-full max-w-[100vw] flex flex-col bg-mush-night overflow-x-hidden"
       style={{
         background: 'linear-gradient(165deg, #0f0f1a 0%, #1a1a2e 40%, #16213e 100%)',
       }}

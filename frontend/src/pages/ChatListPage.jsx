@@ -37,35 +37,30 @@ export function ChatListPage() {
   const displayList = list.length > 0 ? list : MOCK_PEERS.map((p) => ({ peerAddress: p.address, peerName: p.name, lastMessage: null, lastAt: null }));
 
   return (
-    <div className="min-h-screen text-white flex flex-col pb-20 chat-page-bg">
+    <div className="flex min-h-screen flex-col bg-background pb-nav chat-page-bg">
       <header className="flex items-center gap-3 p-4 pt-safe chat-header-glow">
         <button
           type="button"
           onClick={() => navigate('/map')}
-          className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xl transition-colors shrink-0"
+          className="touch-target w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xl shrink-0"
+          aria-label="Back to map"
         >
           ←
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-white">Chat</h1>
-          <div className="mt-2">
-            {isReady ? (
-              <span className="chat-pill chat-pill-ok">
-                <span className="opacity-90">✨</span>
-                Real-time · Connected
-              </span>
-            ) : (
-              <span className="chat-pill chat-pill-loading">
-                Connect wallet to chat
-              </span>
-            )}
-          </div>
+          <h1 className="mb-4 text-4xl font-bold">Chat</h1>
+          <p className="text-xl text-muted-foreground">
+            {isReady ? 'Real-time · Connected' : 'Connect wallet to chat'}
+          </p>
         </div>
       </header>
 
       {!isReady && (
-        <div className="flex-1 p-6 text-white/70 text-sm max-w-sm">
-          <p>Connect your wallet first. After connecting, you can send and receive messages in real time with others at the hackathon.</p>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center">
+            <p className="text-xl text-muted-foreground">Connect your wallet first.</p>
+            <p className="text-muted-foreground mt-2">After connecting, you can send and receive messages in real time.</p>
+          </div>
         </div>
       )}
 
@@ -82,8 +77,8 @@ export function ChatListPage() {
                 🍄
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate text-white">{c.peerName}</p>
-                <p className="text-white/50 text-sm truncate">
+                <p className="font-medium truncate text-foreground">{c.peerName}</p>
+                <p className="text-muted-foreground text-sm truncate">
                   {c.lastMessage || 'Tap to say hi'}
                 </p>
               </div>

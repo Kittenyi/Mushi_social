@@ -63,7 +63,7 @@ export function MapPage() {
   const name = (displayName || '').trim() || 'Mushi';
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden" style={{ height: '100vh', minHeight: '100%' }}>
+    <div className="h-full w-full flex flex-col overflow-hidden min-h-mobile">
       <div className="flex-1 min-h-0 relative flex flex-col" style={{ minHeight: 300 }}>
         <MapView key={nightMode ? 'dark' : 'light'} nightMode={nightMode} />
 
@@ -77,7 +77,7 @@ export function MapPage() {
           <button
             type="button"
             onClick={toggleNightMode}
-            className="w-10 h-10 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 text-white flex items-center justify-center shadow-lg hover:ring-2 hover:ring-violet-400/50 transition-all"
+            className="touch-target w-11 h-11 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 text-white flex items-center justify-center shadow-lg hover:ring-2 hover:ring-violet-400/50 transition-all"
             title={nightMode ? 'Day mode' : 'Night mode'}
             aria-label={nightMode ? 'Switch to day mode' : 'Switch to night mode'}
           >

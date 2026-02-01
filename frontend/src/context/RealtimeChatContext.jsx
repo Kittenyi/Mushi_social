@@ -2,6 +2,7 @@
  * 中心化实时聊天：连接钱包后注册地址，通过 Socket.io 收新消息，REST 拉历史与发送
  */
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import * as chatApi from '../lib/chatApi';
 
@@ -25,28 +26,49 @@ export function useRealtimeChat() {
 }
 
 export function RealtimeChatProvider({ myAddress, children }) {
+  const { pathname } = useLocation();
   const [messagesByPeer, setMessagesByPeer] = useState({});
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
   const myNorm = normalizeAddress(myAddress);
 
+  // 仅在进入聊天相关页面时建立 Socket，避免地图页等触发 WebSocket 报错
+  const needSocket = pathname === '/chat' || pathname.startsWith('/chat/');
+
   useEffect(() => {
-    if (!myNorm) {
+    if (!myNorm || !needSocket) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
-      setConversations([]);
-      setMessagesByPeer({});
+      if (!myNorm) {
+        setConversations([]);
+        setMessagesByPeer({});
+      }
       return;
     }
 
     const url = import.meta.env.VITE_API_URL || 'http://localhost:5001';
     const wsBase = url.replace(/\/api\/?$/, '').trim() || 'http://localhost:5001';
-    const socket = io(wsBase, { transports: ['websocket', 'polling'], withCredentials: true });
+    const socket = io(wsBase, {
+      transports: ['polling', 'websocket'],
+      withCredentials: true,
+      reconnectionAttempts: 2,
+      reconnectionDelay: 3000,
+    });
     socketRef.current = socket;
-    socket.emit('register', { address: myNorm });
+
+    let connectErrorLogged = false;
+    socket.on('connect_error', () => {
+      if (!connectErrorLogged && import.meta.env.DEV) {
+        connectErrorLogged = true;
+        console.warn('[RealtimeChat] Backend not available at', wsBase, '- chat will work when backend runs.');
+      }
+    });
+    socket.on('connect', () => {
+      socket.emit('register', { address: myNorm });
+    });
 
     socket.on('new_message', (msg) => {
       const peer = msg.from === myNorm ? msg.to : msg.from;
@@ -64,7 +86,7 @@ export function RealtimeChatProvider({ myAddress, children }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [myNorm]);
+  }, [myNorm, needSocket]);
 
   const loadMessages = useCallback(
     async (peer) => {

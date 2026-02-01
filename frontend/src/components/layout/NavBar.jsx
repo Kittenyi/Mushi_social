@@ -1,11 +1,12 @@
 /**
- * Bottom nav: Chat & Friends only. Dynamic pill + glow when active.
+ * Bottom nav: Chat、Friends、我（个人主页）
  */
 import { NavLink } from 'react-router-dom';
 
 const items = [
   { to: '/chat', label: 'Chat', icon: '💬' },
   { to: '/friends', label: 'Friends', icon: '👥' },
+  { to: '/settings', label: 'Me', icon: '🍄' },
 ];
 
 export function NavBar() {

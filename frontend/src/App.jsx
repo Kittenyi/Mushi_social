@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAccount, useWalletClient } from 'wagmi';
 import { XmtpProvider } from './context/XmtpContext';
@@ -7,7 +7,9 @@ import { RealtimeChatProvider } from './context/RealtimeChatContext';
 import { createEoaSigner } from './lib/xmtpSigner';
 import { OnboardingGate } from './components/OnboardingGate';
 import { WelcomePage } from './pages/WelcomePage';
-import { OnboardingLayout } from './pages/onboarding/OnboardingLayout';
+import { OnboardingScanPage } from './pages/OnboardingScanPage';
+import { OnboardingResultPage } from './pages/OnboardingResultPage';
+import { MapPage } from './pages/MapPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ChatListPage } from './pages/ChatListPage';
 import { ChatDetailPage } from './pages/ChatDetailPage';
@@ -15,7 +17,6 @@ import { FriendsPage } from './pages/FriendsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
-const MapPage = lazy(() => import('./pages/map/MapPage').then((m) => ({ default: m.MapPage })));
 
 const WALLET_RETRY_MS = 400;
 const WALLET_RETRY_MAX = 15;
@@ -61,9 +62,10 @@ function AppWithWallet() {
         <XmtpProvider signer={signer}>
           <Routes>
         <Route path="/" element={<WelcomePage />} />
-        <Route path="/onboarding/*" element={<OnboardingLayout />} />
+        <Route path="/onboarding" element={<OnboardingScanPage />} />
+        <Route path="/onboarding/result" element={<OnboardingResultPage />} />
         <Route element={<OnboardingGate />}>
-          <Route path="/map" element={<Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white/70">Loading map…</div>}><MapPage /></Suspense>} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/chat/:id" element={<ChatDetailPage />} />

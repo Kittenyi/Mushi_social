@@ -89,7 +89,7 @@ export function SettingsPage() {
   const genderOption = GENDER_OPTIONS.find((o) => o.id === gender);
 
   return (
-    <div className="min-h-screen text-white flex flex-col profile-page pb-20">
+    <div className="flex min-h-screen flex-col bg-background profile-page pb-nav">
       {/* 顶部：标题、MUSHI pill、主题/编辑 */}
       <header className="flex items-center justify-between p-4 pt-safe">
         <div className="w-10" />

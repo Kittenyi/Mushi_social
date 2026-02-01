@@ -27,7 +27,7 @@ export function ProfilePage() {
   const chatAddress = location.state?.address ?? user.address;
 
   return (
-    <div className="min-h-screen text-white flex flex-col profile-page-v2">
+    <div className="flex min-h-screen flex-col bg-background pb-nav profile-page-v2">
       {/* 顶栏：返回 | @handle | 通知+菜单 */}
       <header className="profile-v2-header">
         <button type="button" onClick={() => navigate(-1)} className="profile-v2-header-btn" aria-label="Back">
