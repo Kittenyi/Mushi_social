@@ -64,7 +64,7 @@ export function SoulStep() {
               setTimeout(fetchSoul, 2000);
               return;
             }
-            setError('拉取身份数据失败');
+            setError('Failed to load identity data');
             setSoul(null);
           }
         })

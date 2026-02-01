@@ -41,19 +41,19 @@ export function LBSStep() {
         <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl mb-6">
           📍
         </div>
-        <h2 className="text-2xl font-semibold text-white mb-2">开启位置</h2>
+        <h2 className="text-2xl font-semibold text-white mb-2">Enable location</h2>
         <p className="text-white/50 text-center text-sm max-w-xs mb-2">
-          开启后可以在地图上看到附近的朋友，一起喝咖啡、一起 Sabai。
+          See friends nearby on the map — grab coffee and Sabai together.
         </p>
         <p className="text-white/40 text-center text-xs max-w-xs mb-10">
-          我们仅用于展示「附近的人」，可随时在设置中关闭。
+          We only use it to show “nearby” — you can turn it off anytime in Settings.
         </p>
         <button
           type="button"
           onClick={handleRequestLocation}
           className="btn-primary w-full max-w-sm mb-4"
         >
-          {status === 'granted' ? '已开启，进入地图…' : status === 'denied' ? '已跳过，进入地图…' : '开启定位'}
+          {status === 'granted' ? 'Enabled — go to map…' : status === 'denied' ? 'Skipped — go to map…' : 'Enable location'}
         </button>
         <button
           type="button"
@@ -63,7 +63,7 @@ export function LBSStep() {
           }}
           className="text-white/40 text-sm hover:text-white/60 transition-colors"
         >
-          跳过
+          Skip
         </button>
       </div>
     </OnboardingShell>

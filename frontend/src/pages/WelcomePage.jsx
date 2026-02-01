@@ -48,7 +48,7 @@ export function WelcomePage() {
         🍄
       </div>
       <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-2">Mushi</h1>
-      <p className="text-white/50 text-lg mb-12">你的灵魂，长成蘑菇</p>
+      <p className="text-white/50 text-lg mb-12">Your soul, grown into a mushroom</p>
 
       {showEmailForm ? (
         <div className="w-full max-w-sm flex flex-col gap-4 mb-4">
@@ -56,7 +56,7 @@ export function WelcomePage() {
             type="email"
             value={emailValue}
             onChange={(e) => setEmailValue(e.target.value)}
-            placeholder="输入邮箱"
+            placeholder="Enter email"
             className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 text-center"
             autoFocus
           />
@@ -65,14 +65,14 @@ export function WelcomePage() {
             onClick={handleEmailRegister}
             className="btn-primary w-full"
           >
-            注册
+            Sign up
           </button>
           <button
             type="button"
             onClick={() => { setShowEmailForm(false); setEmailValue(''); }}
             className="text-white/50 text-sm hover:text-white/70"
           >
-            返回
+            Back
           </button>
         </div>
       ) : (
@@ -83,10 +83,10 @@ export function WelcomePage() {
             onClick={() => setShowEmailForm(true)}
             className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
           >
-            邮箱注册
+            Sign up with email
           </button>
           <Link to="/onboarding" className="text-white/50 text-sm hover:text-white/70">
-            {isConnected ? '重新体验 5 步引导' : '或先体验引导流程'}
+            {isConnected ? 'Re-run 5-step onboarding' : 'Or try onboarding first'}
           </Link>
         </div>
       )}

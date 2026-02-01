@@ -1,20 +1,32 @@
 {
-  "name": "Mushi - 你的灵魂，长成蘑菇",
+  "name": "Mushi - Your soul, grown into a mushroom",
   "short_name": "Mushi",
-  "description": "Web3 社交地图 · 基于位置的灵魂社交",
+  "description": "Web3 social map · Location-based soul social",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#7c3aed",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "zh-CN",
+  "lang": "en",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "64x64",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

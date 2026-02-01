@@ -32,19 +32,32 @@ export function XmtpProvider({ signer, children }) {
   const connectTimeoutRef = useRef(null);
   signerRef.current = signer;
 
+  const CONNECT_TIMEOUT_MS = 30000;
+
   const connect = useCallback(async (s) => {
     const signerToUse = s ?? signerRef.current;
     if (!signerToUse) {
-      setError('请先连接钱包');
+      setError(typeof window !== 'undefined' && typeof window.ethereum === 'undefined' ? 'No Ethereum wallet detected. Install MetaMask and retry.' : 'Connect your wallet first.');
       return;
     }
     if (connectInFlightRef.current) return;
     connectInFlightRef.current = true;
     setIsLoading(true);
     setError(null);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      setError('XMTP connection timed out. Try again.');
+      setClient(null);
+      setMyAddress(null);
+      setIsLoading(false);
+      connectInFlightRef.current = false;
+    }, CONNECT_TIMEOUT_MS);
     try {
       const { Client } = await import('@xmtp/browser-sdk');
       const c = await Client.create(signerToUse, {});
+      clearTimeout(timeoutId);
+      if (timedOut) return;
       setClient(c);
       try {
         const id = signerToUse.getIdentifier?.();
@@ -53,7 +66,8 @@ export function XmtpProvider({ signer, children }) {
         setMyAddress(null);
       }
     } catch (e) {
-      setError(e?.message ?? 'XMTP 初始化失败');
+      clearTimeout(timeoutId);
+      setError(e?.message ?? 'XMTP init failed');
       setClient(null);
       setMyAddress(null);
     } finally {
@@ -68,7 +82,7 @@ export function XmtpProvider({ signer, children }) {
     setMyAddress(null);
   }, []);
 
-  // 当 signer 从外部传入时自动连接 XMTP；防抖 200ms 避免 signer 引用抖动导致反复 connect、卡死
+  // 当 signer 从外部传入时自动连接 XMTP；防抖 200ms，且失败后不自动重试（避免无限「正在准备 XMTP」）
   useEffect(() => {
     if (!signer) {
       if (connectTimeoutRef.current) {
@@ -78,7 +92,7 @@ export function XmtpProvider({ signer, children }) {
       disconnect();
       return;
     }
-    if (client || isLoading) return;
+    if (client || isLoading || error) return;
     if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
     connectTimeoutRef.current = setTimeout(() => {
       connectTimeoutRef.current = null;
@@ -90,7 +104,7 @@ export function XmtpProvider({ signer, children }) {
         connectTimeoutRef.current = null;
       }
     };
-  }, [signer, client, isLoading, connect, disconnect]);
+  }, [signer, client, isLoading, error, connect, disconnect]);
 
   const value = {
     client,
@@ -100,6 +114,7 @@ export function XmtpProvider({ signer, children }) {
     disconnect,
     isConnected: !!client,
     myAddress,
+    inboxId: client?.inboxId ?? null,
   };
 
   return (

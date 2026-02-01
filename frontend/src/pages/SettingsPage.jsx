@@ -1,5 +1,5 @@
 /**
- * 个人主页「我」— 参考 Soul 等 Web2 社交：封面 + 大头像 + 身份标签 + 设置收拢
+ * 个人主页「我」— BLINK 风格：紫→金渐变、大头像、钱包标签、Bio CTA、2x2 可爱区 + 设置列表
  */
 import { useState, useEffect, useRef } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
@@ -9,6 +9,7 @@ import { fetchSoulByAddress } from '../lib/soulApi';
 import { useProfileStore } from '../stores/useProfileStore';
 import { clearOnboardingDone } from '../lib/onboarding';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 const TAG_COLORS = {
   gold: 'from-amber-400 to-yellow-500',
@@ -23,13 +24,19 @@ const TAG_COLORS = {
 };
 
 const GENDER_OPTIONS = [
-  { id: 'male', symbol: '♂', label: '男' },
-  { id: 'female', symbol: '♀', label: '女' },
-  { id: 'nonbinary', symbol: '⚲', label: '非二元' },
+  { id: 'male', symbol: '♂', label: 'Male' },
+  { id: 'female', symbol: '♀', label: 'Female' },
+  { id: 'nonbinary', symbol: '⚲', label: 'Non-binary' },
 ];
+
+function shortId(address) {
+  if (!address || !address.startsWith('0x')) return '—';
+  return `${address.slice(2, 6)}…${address.slice(-4)}`;
+}
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { nightMode, toggleNightMode } = useTheme();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const [soul, setSoul] = useState(null);
@@ -78,90 +85,95 @@ export function SettingsPage() {
   }, [address, isConnected]);
 
   const tags = soul?.tags ?? [];
-  const name = (displayName || '').trim() || '未设置昵称';
+  const name = (displayName || '').trim() || 'Set your name';
   const genderOption = GENDER_OPTIONS.find((o) => o.id === gender);
 
   return (
-    <div
-      className="min-h-screen text-white flex flex-col pb-20"
-      style={{
-        background: 'linear-gradient(180deg, #1a0f2e 0%, #0f0f1a 28%, #0f0f1a 100%)',
-      }}
-    >
-      {/* 顶部封面区 — Soul 风格 */}
-      <header className="relative">
-        <div
-          className="h-36 w-full rounded-b-3xl"
-          style={{
-            background: 'linear-gradient(135deg, #2e1a4e 0%, #1a1a2e 50%, #16213e 100%)',
-            boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.06)',
-          }}
-        />
-        {/* 大头像叠在封面下缘 */}
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-12 flex justify-center">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-[#0f0f1a] bg-white/10 shadow-xl ring-2 ring-white/10 transition-transform active:scale-95"
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="头像" className="w-full h-full object-cover" />
-            ) : (
-              <span className="flex items-center justify-center w-full h-full text-5xl">🍄</span>
-            )}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const reader = new FileReader();
-              reader.onload = () => setAvatarUrl(reader.result);
-              reader.readAsDataURL(file);
-              e.target.value = '';
-            }}
-          />
+    <div className="min-h-screen text-white flex flex-col profile-page pb-20">
+      {/* 顶部：标题、MUSHI pill、主题/编辑 */}
+      <header className="flex items-center justify-between p-4 pt-safe">
+        <div className="w-10" />
+        <span className="profile-app-pill">MUSHI</span>
+        <div className="flex items-center gap-2">
+          <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Theme">🎨</button>
+          <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Edit" onClick={() => setShowEdit((v) => !v)}>✏️</button>
         </div>
       </header>
 
-      {/* 资料卡片区 */}
-      <div className="flex-1 px-5 pt-16 pb-6">
-        {/* 昵称 + 性别标签 + 编辑 */}
-        <div className="text-center mb-5">
-          <h1 className="text-2xl font-bold text-white mb-2">{name}</h1>
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-            {genderOption && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-white/10 text-white/90 border border-white/10">
-                <span aria-hidden>{genderOption.symbol}</span>
-                {genderOption.label}
-              </span>
+      <div className="profile-hero flex-1 flex flex-col items-center px-6 pt-2 pb-6">
+        {/* 大头像：圆角方 + 发光，可点击换图 */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="profile-avatar-wrap mb-3"
+        >
+          <div className="profile-avatar overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-5xl">🍄</span>
             )}
-            <button
-              type="button"
-              onClick={() => setShowEdit((v) => !v)}
-              className="text-violet-400 hover:text-violet-300 text-sm font-medium"
-            >
-              {showEdit ? '收起' : '编辑资料'}
-            </button>
           </div>
-          {email && (
-            <p className="text-white/40 text-xs">已绑定邮箱</p>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => setAvatarUrl(reader.result);
+            reader.readAsDataURL(file);
+            e.target.value = '';
+          }}
+        />
+
+        {/* 钱包标签 */}
+        {isConnected && address && (
+          <div className="profile-wallet-tag mb-2">
+            <span className="opacity-80">🔗</span>
+            <span className="font-mono text-sm">{shortId(address)}</span>
+          </div>
+        )}
+        <h1 className="text-2xl font-bold text-white mb-1">{name}</h1>
+
+        {/* 性别 + Soul 标签 */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+          {genderOption && (
+            <span className="profile-soul-pill inline-flex items-center gap-1.5">
+              <span aria-hidden>{genderOption.symbol}</span>
+              {genderOption.label}
+            </span>
           )}
+          {tags.slice(0, 3).map((t) => (
+            <span
+              key={t.label}
+              className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${TAG_COLORS[t.color] ?? TAG_COLORS.gray} shadow-md`}
+            >
+              {t.label}
+            </span>
+          ))}
         </div>
+        {email && <p className="text-white/40 text-xs mb-2">Email linked</p>}
+
+        {/* Bio CTA */}
+        <button type="button" className="profile-bio-cta w-full max-w-sm mt-2 mb-4">
+          <span className="opacity-70">✏️</span>
+          <span className="text-white/50">Tell us about yourself</span>
+        </button>
 
         {/* 编辑资料展开 */}
         {showEdit && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 mb-5 animate-fade-in-up">
-            <p className="text-white/70 text-sm font-medium mb-3">姓名</p>
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-4 mb-4">
+            <p className="text-white/70 text-sm font-medium mb-2">Display name</p>
             <div className="flex gap-2 mb-4">
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                placeholder="你的名字"
+                placeholder="Your name"
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-white/40 text-sm"
                 maxLength={20}
               />
@@ -170,10 +182,10 @@ export function SettingsPage() {
                 onClick={() => setDisplayName(editName)}
                 className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shrink-0"
               >
-                保存
+                Save
               </button>
             </div>
-            <p className="text-white/70 text-sm font-medium mb-2">性别</p>
+            <p className="text-white/70 text-sm font-medium mb-2">Gender</p>
             <div className="flex gap-2 flex-wrap">
               {GENDER_OPTIONS.map(({ id, symbol, label }) => (
                 <button
@@ -181,9 +193,7 @@ export function SettingsPage() {
                   type="button"
                   onClick={() => setGender(id)}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    gender === id
-                      ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
-                      : 'bg-white/10 hover:bg-white/15 text-white border border-white/5'
+                    gender === id ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25' : 'bg-white/10 hover:bg-white/15 text-white border border-white/5'
                   }`}
                 >
                   <span className="opacity-90" aria-hidden>{symbol}</span>
@@ -194,43 +204,55 @@ export function SettingsPage() {
           </div>
         )}
 
-        {/* 灵魂标签 — Soul 风格 pill */}
-        {(tags.length > 0 || isConnected) && (
-          <section className="mb-6">
-            <p className="text-white/60 text-xs font-medium mb-2 px-1">灵魂标签 · 链上画像</p>
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  <span
-                    key={t.label}
-                    className={`px-3.5 py-1.5 rounded-full text-sm font-medium text-white bg-gradient-to-r ${TAG_COLORS[t.color] ?? TAG_COLORS.gray} shadow-lg`}
-                  >
-                    {t.label}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-white/40 text-sm">未获取到标签（请确认后端 /api/soul 已启动）</p>
-            )}
-          </section>
-        )}
+        {/* 2x2 可爱功能区 */}
+        <div className="profile-grid w-full max-w-sm grid grid-cols-2 gap-4 mb-6">
+          <button type="button" className="profile-grid-item">
+            <div className="profile-grid-icon profile-grid-friends">👥</div>
+            <span>Friends</span>
+          </button>
+          <button type="button" className="profile-grid-item">
+            <div className="profile-grid-icon profile-grid-number">0</div>
+            <span>Activity</span>
+          </button>
+          <button type="button" className="profile-grid-item">
+            <div className="profile-grid-icon profile-grid-star">⭐</div>
+            <span>Achievements</span>
+          </button>
+          <button type="button" className="profile-grid-item">
+            <div className="profile-grid-icon profile-grid-check">📍</div>
+            <span>Check-in</span>
+          </button>
+        </div>
 
-        {/* 设置区 — 收拢为列表 */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-          <p className="px-4 py-3 text-white/60 text-xs font-medium border-b border-white/10">设置</p>
+        {/* 设置卡片：钱包 / 幽灵模式 / 分享 / 引导 */}
+        <section className="w-full max-w-sm profile-status-card overflow-hidden mb-4">
+          <p className="px-4 py-3 text-white/60 text-xs font-medium border-b border-white/10">Settings</p>
 
-          {/* 钱包 */}
+          <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-white/80 font-medium text-sm">Night mode</p>
+              <p className="text-white/45 text-xs mt-0.5">Dark map and UI</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={nightMode}
+              onClick={toggleNightMode}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${nightMode ? 'bg-violet-500' : 'bg-white/20'}`}
+            >
+              <span
+                className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-200 ${nightMode ? 'left-[calc(100%-1.25rem)]' : 'left-1'}`}
+              />
+            </button>
+          </div>
+
           <div className="px-4 py-3 border-b border-white/10">
-            <p className="text-white/80 font-medium text-sm mb-1">钱包</p>
+            <p className="text-white/80 font-medium text-sm mb-1">Wallet</p>
             {isConnected && address ? (
               <>
                 <p className="text-white/50 text-xs font-mono truncate mb-2">{address}</p>
-                <button
-                  type="button"
-                  onClick={() => disconnect()}
-                  className="text-red-400 hover:text-red-300 text-sm"
-                >
-                  断开连接
+                <button type="button" onClick={() => disconnect()} className="text-red-400 hover:text-red-300 text-sm">
+                  Disconnect
                 </button>
               </>
             ) : (
@@ -238,39 +260,32 @@ export function SettingsPage() {
             )}
           </div>
 
-          {/* 幽灵模式 */}
           <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
             <div>
-              <p className="text-white/80 font-medium text-sm">幽灵模式</p>
-              <p className="text-white/45 text-xs mt-0.5">打开后地图上不显示你的位置</p>
+              <p className="text-white/80 font-medium text-sm">Ghost mode</p>
+              <p className="text-white/45 text-xs mt-0.5">Hide your location on the map</p>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={ghostMode}
               onClick={() => setGhostMode(!ghostMode)}
-              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-                ghostMode ? 'bg-violet-500' : 'bg-white/20'
-              }`}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${ghostMode ? 'bg-violet-500' : 'bg-white/20'}`}
             >
               <span
-                className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-200 ${
-                  ghostMode ? 'left-[calc(100%-1.25rem)]' : 'left-1'
-                }`}
+                className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-200 ${ghostMode ? 'left-[calc(100%-1.25rem)]' : 'left-1'}`}
               />
             </button>
           </div>
 
-          {/* 分享 */}
           <div className="px-4 py-3 border-b border-white/10">
-            <p className="text-white/80 font-medium text-sm">分享</p>
-            <p className="text-white/45 text-xs mt-0.5">分享 Profile、当前位置、生成分享卡片</p>
+            <p className="text-white/80 font-medium text-sm">Share</p>
+            <p className="text-white/45 text-xs mt-0.5">Share profile and location</p>
           </div>
 
-          {/* 引导 */}
           <div className="px-4 py-3">
-            <p className="text-white/80 font-medium text-sm mb-1">引导</p>
-            <p className="text-white/45 text-xs mb-2">清除后下次打开会先进入欢迎/引导页</p>
+            <p className="text-white/80 font-medium text-sm mb-1">Onboarding</p>
+            <p className="text-white/45 text-xs mb-2">Clear to see welcome screen again next time</p>
             <button
               type="button"
               onClick={() => {
@@ -279,10 +294,16 @@ export function SettingsPage() {
               }}
               className="text-violet-400 hover:text-violet-300 text-sm"
             >
-              清除引导状态
+              Clear onboarding
             </button>
           </div>
         </section>
+
+        {isConnected && tags.length === 0 && (
+          <p className="text-white/40 text-xs text-center max-w-sm mb-2">
+            Soul tags require backend. Use settings above until then.
+          </p>
+        )}
       </div>
 
       <NavBar />

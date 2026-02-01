@@ -12,17 +12,25 @@ const DEFAULT_CENTER = [98.9853, 18.7883];
 const DEFAULT_ZOOM = 14;
 const DEFAULT_PITCH = 45;
 
-// 模拟附近用户（带 0x 地址，便于从地图/Profile 直接「发消息」进聊天，无需手动输入地址）
+// 模拟附近用户（带 0x 地址、兴趣标签，点头像进 Profile / 气泡显示 tag）
 const MOCK_NEARBY = [
-  { id: '1', address: '0x1111111111111111111111111111111111111111', lng: 98.986, lat: 18.789, name: 'Alex', status: '在喝咖啡 ☕', isFriend: false },
-  { id: '2', address: '0x2222222222222222222222222222222222222222', lng: 98.984, lat: 18.787, name: 'Sam', status: 'Yellow Coworking', isFriend: true },
-  { id: '3', address: '0x3333333333333333333333333333333333333333', lng: 98.987, lat: 18.788, name: 'Jade', status: '写代码中 💻', isFriend: false },
+  { id: '1', address: '0x1111111111111111111111111111111111111111', lng: 98.986, lat: 18.789, name: 'Alex', status: 'Having coffee ☕', isFriend: false, tags: ['Coffee', 'Photography', 'Writing'] },
+  { id: '2', address: '0x2222222222222222222222222222222222222222', lng: 98.984, lat: 18.787, name: 'Sam', status: 'Yellow Coworking', isFriend: true, tags: ['Coworking', 'Design', 'Running'] },
+  { id: '3', address: '0x3333333333333333333333333333333333333333', lng: 98.987, lat: 18.788, name: 'Jade', status: 'Coding 💻', isFriend: false, tags: ['Code', 'Yoga', 'Foodie'] },
 ];
 
-/** 创建「我」的标记 DOM：有头像用 img，否则蘑菇 */
-function createMeMarkerEl(avatarUrl) {
+/** 创建「我」的标记 DOM：有头像用 img，否则蘑菇；点击跳转个人简介 */
+function createMeMarkerEl(avatarUrl, onMeClick) {
   const wrap = document.createElement('div');
   wrap.className = 'map-marker-me';
+  wrap.style.cursor = 'pointer';
+  if (onMeClick) {
+    wrap.setAttribute('title', 'My profile');
+    wrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onMeClick();
+    });
+  }
   if (avatarUrl) {
     const img = document.createElement('img');
     img.src = avatarUrl;
@@ -73,12 +81,17 @@ function createUserMarkerEl(user, onHideCard, onAvatarClick) {
     });
   }
 
+  const tags = user.tags || [];
+  const tagsHtml = tags.length
+    ? `<div class="card-tags">${tags.map((t) => `<span class="card-tag">${t}</span>`).join('')}</div>`
+    : '';
   const card = document.createElement('div');
   card.className = 'map-user-card';
   card.style.display = 'none';
   card.innerHTML = `
     <div style="font-weight:600;margin-bottom:4px;">${user.name}</div>
     <div class="status">${user.status}</div>
+    ${tagsHtml}
     <div class="actions">
       ${!user.isFriend ? '<button title="Add Friend">👤</button>' : ''}
       <button title="Message">💬</button>
@@ -105,7 +118,7 @@ function createUserMarkerEl(user, onHideCard, onAvatarClick) {
   return wrap;
 }
 
-export function MapView() {
+export function MapView({ nightMode = false }) {
   const navigate = useNavigate();
   const { ghostMode, avatarUrl } = useProfileStore();
   const avatarUrlRef = useRef(avatarUrl);
@@ -125,7 +138,7 @@ export function MapView() {
     setLoading(true);
 
     if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'your_mapbox_public_token') {
-      setError('请设置 Mapbox Token：在 frontend 目录复制 .env.example 为 .env，填入 VITE_MAPBOX_ACCESS_TOKEN');
+      setError('Set Mapbox token: copy .env.example to .env in frontend and set VITE_MAPBOX_ACCESS_TOKEN');
       setLoading(false);
       return;
     }
@@ -144,7 +157,7 @@ export function MapView() {
       mapboxgl.accessToken = MAPBOX_TOKEN;
       const map = new mapboxgl.Map({
         container: containerEl,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: nightMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
         center: DEFAULT_CENTER,
         zoom: DEFAULT_ZOOM,
         pitch: DEFAULT_PITCH,
@@ -155,8 +168,8 @@ export function MapView() {
         console.error('[MapView] Mapbox error', e);
         const msg = e.error?.message || e.error?.toString?.() || '';
         const hint = msg.includes('401') || msg.toLowerCase().includes('token')
-          ? 'Token 无效或已过期，请到 Mapbox 后台检查并更新 .env 中的 VITE_MAPBOX_ACCESS_TOKEN'
-          : msg || 'Mapbox 加载失败，请检查网络或 Token（地图数据来自 Mapbox，不经过本应用后端）';
+          ? 'Invalid or expired Mapbox token. Update VITE_MAPBOX_ACCESS_TOKEN in .env'
+          : msg || 'Map failed to load. Check network or Mapbox token.';
         setError(hint);
         setLoading(false);
       });
@@ -169,12 +182,29 @@ export function MapView() {
         setError(null);
         if (mounted) map.resize();
 
+        // Cute colors (land green, water blue) only in light mode
+        if (!nightMode) {
+          try {
+            const style = map.getStyle();
+            if (style?.layers) {
+              const layerIds = style.layers.map((l) => l.id);
+              if (layerIds.includes('water')) map.setPaintProperty('water', 'fill-color', '#aad3df');
+              if (layerIds.includes('waterway')) map.setPaintProperty('waterway', 'line-color', '#7eb8d4');
+              if (layerIds.includes('background')) map.setPaintProperty('background', 'background-color', '#e8f4e8');
+              if (layerIds.includes('landcover')) map.setPaintProperty('landcover', 'fill-color', '#c5e1a5');
+              if (layerIds.includes('landuse')) map.setPaintProperty('landuse', 'fill-color', '#c5e1a5');
+            }
+          } catch (e) {
+            console.warn('[MapView] Cute style override skipped:', e?.message);
+          }
+        }
+
         let meCenter = [...DEFAULT_CENTER];
         meCenterRef.current = meCenter;
 
         const addMeMarker = () => {
           if (meMarkerRef.current) return;
-          const meEl = createMeMarkerEl(avatarUrlRef.current);
+          const meEl = createMeMarkerEl(avatarUrlRef.current, () => navigate('/settings'));
           const meMarker = new mapboxgl.Marker({ element: meEl, anchor: 'center' })
             .setLngLat(meCenterRef.current)
             .addTo(map);
@@ -232,7 +262,7 @@ export function MapView() {
       // 若 12 秒内未触发 load，视为超时
       loadTimeoutId = setTimeout(() => {
         if (mapRef.current) {
-          setError('地图加载超时，请重试');
+          setError('Map load timeout. Please retry.');
           setLoading(false);
         }
       }, 12000);
@@ -246,7 +276,7 @@ export function MapView() {
       if (!el) {
         tryCount += 1;
         if (tryCount >= MAX_TRY_INIT && mounted) {
-          setError('地图容器未就绪，请刷新页面');
+          setError('Map container not ready. Refresh the page.');
           setLoading(false);
           return;
         }
@@ -259,7 +289,7 @@ export function MapView() {
       }
       tryCount += 1;
       if (tryCount >= MAX_TRY_INIT && mounted) {
-        setError('地图容器无法获得尺寸，请刷新页面');
+        setError('Map container has no size. Refresh the page.');
         setLoading(false);
         return;
       }
@@ -289,7 +319,7 @@ export function MapView() {
         mapRef.current = null;
       }
     };
-  }, [retryKey]);
+  }, [retryKey, nightMode]);
 
   // 幽灵模式切换：打开时移除「我」标记，关闭时加回
   useEffect(() => {
@@ -303,7 +333,7 @@ export function MapView() {
       }
     } else {
         if (!meMarkerRef.current) {
-          const meEl = createMeMarkerEl(avatarUrlRef.current);
+          const meEl = createMeMarkerEl(avatarUrlRef.current, () => navigate('/settings'));
           const meMarker = new mapboxgl.Marker({ element: meEl, anchor: 'center' })
           .setLngLat(meCenterRef.current)
           .addTo(map);
@@ -327,13 +357,13 @@ export function MapView() {
   if (error) {
     return (
       <div className="h-full w-full bg-slate-900 flex flex-col items-center justify-center text-white p-6">
-        <p className="text-amber-400 mb-2">地图加载异常</p>
+        <p className="text-amber-400 mb-2">Map load error</p>
         <p className="text-white/60 text-sm text-center max-w-md mb-4">{error}</p>
         <p className="text-white/40 text-xs text-center max-w-md mb-4">
-          地图由 Mapbox 直接加载，不经过本应用后端。请打开浏览器 F12 → Console/Network 查看具体报错或对 api.mapbox.com 的请求状态。
+          Map is loaded directly from Mapbox. Check F12 → Console/Network for api.mapbox.com.
         </p>
         <button type="button" onClick={handleRetry} className="btn-primary mb-2">
-          重试
+          Retry
         </button>
         <a
           href="https://account.mapbox.com/access-tokens/"
@@ -341,7 +371,7 @@ export function MapView() {
           rel="noopener noreferrer"
           className="text-violet-400 text-sm underline"
         >
-          获取/检查 Mapbox Token →
+          Get / check Mapbox token →
         </a>
       </div>
     );
@@ -350,14 +380,14 @@ export function MapView() {
   return (
     <div className="absolute inset-0 flex flex-col" style={{ minHeight: 0 }}>
       {loading && (
-        <div className="absolute inset-0 z-10 bg-slate-800 flex items-center justify-center text-white/70">
-          地图加载中…
+        <div className="absolute inset-0 z-10 map-cute-bg flex items-center justify-center text-slate-600 font-medium">
+          Loading map…
         </div>
       )}
       <div
         key={retryKey}
         ref={containerRef}
-        className="absolute inset-0 bg-slate-800"
+        className="absolute inset-0 map-cute-bg"
         style={{ minHeight: 200 }}
       />
     </div>

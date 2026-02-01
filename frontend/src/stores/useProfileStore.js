@@ -64,8 +64,22 @@ export function useProfileStore() {
     setProfile((p) => ({ ...p, ghostMode: Boolean(on) }));
   }, [setProfile]);
 
+  // Rehydrate from localStorage on mount and when tab becomes visible (e.g. after wallet connect or refresh)
   useEffect(() => {
     setProfileState(load());
+  }, []);
+
+  useEffect(() => {
+    const rehydrate = () => setProfileState(load());
+    const onVisibility = () => { if (document.visibilityState === 'visible') rehydrate(); };
+    window.addEventListener('storage', rehydrate);
+    window.addEventListener('focus', rehydrate);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('storage', rehydrate);
+      window.removeEventListener('focus', rehydrate);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   return {

@@ -1,97 +1,123 @@
 /**
- * 用户 Profile 页 - 全屏玻璃质感、大头像、Bio、Soul 标签、操作按钮
- * 从地图点进来会带 state.address，可直接「发消息」进聊天（无需输入 0x 地址）
+ * 用户 Profile 页 - BLINK 炫酷风格：深色背景、大圆形头像光晕、@handle、统计、2x2 圆形功能格
  */
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { NavBar } from '../components/layout/NavBar';
 
-// 模拟用户（与地图 MOCK_NEARBY 对应，含 address 便于直接发消息）
 const MOCK_USERS = {
-  '1': { name: 'Alex', address: '0x1111111111111111111111111111111111111111', bio: '清迈数字游民，爱咖啡与代码', soulType: 'Degen', status: '在喝咖啡 ☕', isFriend: false },
-  '2': { name: 'Sam', address: '0x2222222222222222222222222222222222222222', bio: 'Yellow Coworking 常驻', soulType: 'Builder', status: 'Yellow Coworking', isFriend: true },
-  '3': { name: 'Jade', address: '0x3333333333333333333333333333333333333333', bio: '写代码中', soulType: 'Explorer', status: '写代码中 💻', isFriend: false },
+  '1': { name: 'Alex', address: '0x1111111111111111111111111111111111111111', bio: 'Digital nomad in Chiang Mai, coffee & code', soulType: 'Degen', status: 'Having coffee ☕', isFriend: false, tags: ['Coffee', 'Photography', 'Writing'], following: 12, followers: 89 },
+  '2': { name: 'Sam', address: '0x2222222222222222222222222222222222222222', bio: 'Yellow Coworking regular', soulType: 'Builder', status: 'Yellow Coworking', isFriend: true, tags: ['Coworking', 'Design', 'Running'], following: 24, followers: 156 },
+  '3': { name: 'Jade', address: '0x3333333333333333333333333333333333333333', bio: 'Coding & building', soulType: 'Explorer', status: 'Coding 💻', isFriend: false, tags: ['Code', 'Yoga', 'Foodie'], following: 8, followers: 42 },
 };
+
+function shortId(address) {
+  if (!address || !address.startsWith('0x')) return '—';
+  return `${address.slice(2, 6)}…${address.slice(-4)}`;
+}
+
+function handleFromName(name) {
+  return name ? `@${name.toLowerCase().replace(/\s/g, '_')}` : '@mushi';
+}
 
 export function ProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const user = MOCK_USERS[id] || { name: 'Unknown', address: null, bio: '', soulType: 'Degen', isFriend: false };
+  const user = MOCK_USERS[id] || { name: 'Unknown', address: null, bio: '', soulType: 'Degen', isFriend: false, tags: [], following: 0, followers: 0 };
   const chatAddress = location.state?.address ?? user.address;
 
   return (
-    <div
-      className="min-h-screen text-white flex flex-col"
-      style={{
-        background: 'linear-gradient(165deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
-      }}
-    >
-      <header className="flex items-center justify-between p-4 pt-safe">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl"
-        >
+    <div className="min-h-screen text-white flex flex-col profile-page-v2">
+      {/* 顶栏：返回 | @handle | 通知+菜单 */}
+      <header className="profile-v2-header">
+        <button type="button" onClick={() => navigate(-1)} className="profile-v2-header-btn" aria-label="Back">
           ←
         </button>
-        <span className="text-white/60 text-sm">Profile</span>
-        <div className="w-10" />
+        <span className="profile-v2-handle">{handleFromName(user.name)}</span>
+        <div className="flex items-center gap-2">
+          <button type="button" className="profile-v2-header-btn" title="Notifications" aria-label="Notifications">🔔</button>
+          <button type="button" className="profile-v2-header-btn" title="Menu" aria-label="Menu">⋯</button>
+        </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center px-6 pt-4 pb-20">
-        <div
-          className="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl mb-4 border-2 border-white/10"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}
-        >
-          🍄
-        </div>
-        <h1 className="text-2xl font-semibold text-white mb-1">{user.name}</h1>
-        <span
-          className="text-sm px-3 py-1 rounded-full mb-4"
-          style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(167,139,250,0.3) 100%)',
-            border: '1px solid rgba(167,139,250,0.4)',
-          }}
-        >
-          {user.soulType}
-        </span>
-        <p className="text-white/60 text-center text-sm max-w-xs mb-8">{user.bio}</p>
-
-        <div
-          className="w-full max-w-sm rounded-3xl p-5 mb-8 border border-white/[0.08] backdrop-blur-xl"
-          style={{ background: 'rgba(255,255,255,0.06)' }}
-        >
-          <p className="text-white/50 text-sm mb-4">状态</p>
-          <p className="text-white/90">{user.status}</p>
+      <div className="profile-v2-body flex-1 flex flex-col items-center px-5 pb-24 overflow-y-auto">
+        {/* 统计：Following | Followers */}
+        <div className="profile-v2-stats">
+          <span><strong>{user.following ?? 0}</strong> Following</span>
+          <span><strong>{user.followers ?? 0}</strong> Friends</span>
         </div>
 
-        <div className="flex gap-3 w-full max-w-sm">
+        {/* 大圆形头像 + 紫/金光晕 */}
+        <div className="profile-v2-avatar-wrap">
+          <div className="profile-v2-avatar">
+            🍄
+          </div>
+        </div>
+
+        <h1 className="profile-v2-name">{user.name}</h1>
+        {user.address && (
+          <p className="profile-v2-wallet">{shortId(user.address)}</p>
+        )}
+        <span className="profile-v2-soul">{user.soulType}</span>
+
+        {/* Bio：纯文字，无大框 */}
+        <p className="profile-v2-bio">
+          {user.bio || 'Tell us about yourself'}
+        </p>
+
+        {/* 状态一行 */}
+        <p className="profile-v2-status">{user.status}</p>
+
+        {/* What I'm into 标签 */}
+        {user.tags && user.tags.length > 0 && (
+          <div className="profile-v2-tags-wrap">
+            <div className="profile-v2-tags">
+              {user.tags.map((tag) => (
+                <span key={tag} className="profile-v2-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 主操作：Edit Profile 风格双按钮 */}
+        <div className="profile-v2-actions">
           {!user.isFriend && (
-            <button
-              type="button"
-              className="flex-1 py-3 rounded-2xl font-medium border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              👤 Add Friend
+            <button type="button" className="profile-v2-btn profile-v2-btn-secondary">
+              Add friend
             </button>
           )}
           <Link
             to={chatAddress ? `/chat/${chatAddress}` : '/chat'}
-            className="flex-1 py-3 rounded-2xl font-medium text-center text-white btn-primary"
+            className="profile-v2-btn profile-v2-btn-primary"
           >
-            💬 发消息
+            <span className="wave-icon" aria-hidden>👋</span>
+            Say hi!
           </Link>
           {user.isFriend && (
-            <button
-              type="button"
-              className="flex-1 py-3 rounded-2xl font-medium border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
-              onClick={() => navigate('/map')}
-            >
-              📍 到Ta那里去
+            <button type="button" className="profile-v2-btn profile-v2-btn-secondary" onClick={() => navigate('/map')}>
+              📍 Location
             </button>
           )}
+        </div>
+
+        {/* 2x2 圆形功能格（参考 BLINK） */}
+        <div className="profile-v2-grid">
+          <button type="button" className="profile-v2-grid-item">
+            <div className="profile-v2-grid-icon profile-v2-icon-friends">👥</div>
+            <span>Friends</span>
+          </button>
+          <button type="button" className="profile-v2-grid-item">
+            <div className="profile-v2-grid-icon profile-v2-icon-activity">18</div>
+            <span>Activity</span>
+          </button>
+          <button type="button" className="profile-v2-grid-item">
+            <div className="profile-v2-grid-icon profile-v2-icon-star">⭐</div>
+            <span>Achievements</span>
+          </button>
+          <button type="button" className="profile-v2-grid-item">
+            <div className="profile-v2-grid-icon profile-v2-icon-check">📍</div>
+            <span>Check-in</span>
+          </button>
         </div>
       </div>
 

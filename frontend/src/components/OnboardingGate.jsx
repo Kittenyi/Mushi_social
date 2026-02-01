@@ -4,7 +4,7 @@
 import { useLocation, Navigate, Outlet } from 'react-router-dom';
 import { getOnboardingDone } from '../lib/onboarding';
 
-const APP_ROUTES_PREFIX = ['/map', '/chat', '/notifications', '/settings'];
+const APP_ROUTES_PREFIX = ['/map', '/chat', '/friends', '/notifications', '/settings'];
 const PROFILE_PREFIX = '/profile/';
 
 export function OnboardingGate() {

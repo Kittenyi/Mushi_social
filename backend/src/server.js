@@ -1,16 +1,28 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { Server as SocketServer } from 'socket.io';
 import connectDB from './config/db.js';
+import chatRoutes, { setChatIo } from './routes/chat.js';
 
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Connect to database (optional for demo: server still runs without MongoDB; chat uses in-memory fallback)
+connectDB().catch((err) => {
+  console.warn('DB not connected, chat will use in-memory storage:', err.message);
+});
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const server = http.createServer(app);
+
+const io = new SocketServer(server, {
+  cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true },
+});
+app.set('io', io);
+setChatIo(io);
 
 // Middleware
 app.use(cors({
@@ -36,6 +48,7 @@ app.use('/api/location', locationRoutes);
 app.use('/api/mushi', mushiRoutes);
 app.use('/api/x402', x402Routes);
 app.use('/api/soul', soulRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -51,6 +64,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

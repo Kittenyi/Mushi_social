@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAccount, useWalletClient } from 'wagmi';
 import { XmtpProvider } from './context/XmtpContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { RealtimeChatProvider } from './context/RealtimeChatContext';
 import { createEoaSigner } from './lib/xmtpSigner';
 import { OnboardingGate } from './components/OnboardingGate';
 import { WelcomePage } from './pages/WelcomePage';
@@ -9,6 +11,7 @@ import { OnboardingLayout } from './pages/onboarding/OnboardingLayout';
 import { ProfilePage } from './pages/ProfilePage';
 import { ChatListPage } from './pages/ChatListPage';
 import { ChatDetailPage } from './pages/ChatDetailPage';
+import { FriendsPage } from './pages/FriendsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
@@ -45,25 +48,33 @@ function AppWithWallet() {
     const signMessageAsync = (msg) => wc.signMessage({ message: msg });
     createEoaSigner(address, signMessageAsync)
       .then((s) => { if (!cancelled) setSigner(s); })
-      .catch(() => { if (!cancelled) setSigner(null); });
+      .catch((e) => {
+        if (!cancelled) setSigner(null);
+        console.error('[XMTP] createEoaSigner failed:', e);
+      });
     return () => { cancelled = true; };
   }, [address, isConnected, walletRetry]);
 
   return (
-    <XmtpProvider signer={signer}>
-      <Routes>
+    <ThemeProvider>
+      <RealtimeChatProvider myAddress={address || null}>
+        <XmtpProvider signer={signer}>
+          <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/onboarding/*" element={<OnboardingLayout />} />
         <Route element={<OnboardingGate />}>
-          <Route path="/map" element={<Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white/70">地图加载中…</div>}><MapPage /></Suspense>} />
+          <Route path="/map" element={<Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white/70">Loading map…</div>}><MapPage /></Suspense>} />
           <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/chat/:id" element={<ChatDetailPage />} />
+          <Route path="/friends" element={<FriendsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </XmtpProvider>
+      </RealtimeChatProvider>
+    </ThemeProvider>
   );
 }
 

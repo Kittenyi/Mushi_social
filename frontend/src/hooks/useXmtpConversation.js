@@ -1,9 +1,20 @@
 /**
  * XMTP 会话与消息 hooks（基于 @xmtp/browser-sdk，动态加载）
  * useConversation(peerAddress), useMessages(dm), useSendMessage(dm)
+ * 注意：IdentifierKind 在 browser-sdk 中为 type-only，运行时需从 wasm-bindings 取
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useOptionalXmtpClient } from '../context/XmtpContext';
+
+async function getIdentifierKindEthereum() {
+  try {
+    const w = await import('@xmtp/wasm-bindings');
+    if (w?.IdentifierKind?.Ethereum !== undefined) return w.IdentifierKind.Ethereum;
+  } catch {
+    // ignore
+  }
+  return 0;
+}
 
 /**
  * 获取或创建与某地址的 DM
@@ -27,15 +38,15 @@ export function useConversation(peerAddress) {
     setIsLoading(true);
     (async () => {
       try {
-        const { IdentifierKind } = await import('@xmtp/browser-sdk');
+        const identifierKindEthereum = await getIdentifierKindEthereum();
         const conversation = await client.conversations.fetchDmByIdentifier({
           identifier: peerAddress.toLowerCase(),
-          identifierKind: IdentifierKind.Ethereum,
+          identifierKind: identifierKindEthereum,
         });
         if (!cancelled) setDm(conversation);
       } catch (e) {
         if (!cancelled) {
-          setError(e?.message ?? '获取会话失败');
+          setError(e?.message ?? 'Failed to load conversation');
           setDm(null);
         }
       } finally {
@@ -58,6 +69,11 @@ export function useMessages(dm) {
   const client = ctx?.client ?? null;
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefreshTick((t) => t + 1);
+  }, []);
 
   useEffect(() => {
     if (!client || !dm) {
@@ -75,9 +91,9 @@ export function useMessages(dm) {
           setMessages(
             arr.map((m) => ({
               id: m.id ?? m.messageId ?? Math.random().toString(36),
-              content: m.content ?? m.text ?? '',
-              senderAddress: m.senderAddress ?? m.sender ?? '',
-              sentAt: m.sentAt ? new Date(m.sentAt) : new Date(),
+              content: typeof m.content === 'string' ? m.content : (m.content ?? m.text ?? ''),
+              senderInboxId: m.senderInboxId ?? m.senderAddress ?? '',
+              sentAt: m.sentAtNs != null ? new Date(Number(m.sentAtNs) / 1e6) : (m.sentAt ? new Date(m.sentAt) : new Date()),
             }))
           );
         }
@@ -89,9 +105,9 @@ export function useMessages(dm) {
     };
     load();
     return () => { cancelled = true; };
-  }, [client, dm]);
+  }, [client, dm, refreshTick]);
 
-  return { messages, isLoading };
+  return { messages, isLoading, refetch };
 }
 
 /**
@@ -108,11 +124,10 @@ export function useSendMessage(dm) {
       setError(null);
       setSending(true);
       try {
-        await dm.sendText(text.trim(), true);
-        await dm.publishMessages?.();
+        await dm.send(text.trim());
         return true;
       } catch (e) {
-        setError(e?.message ?? '发送失败');
+        setError(e?.message ?? 'Send failed');
         return false;
       } finally {
         setSending(false);

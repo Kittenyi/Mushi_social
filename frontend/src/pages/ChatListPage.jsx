@@ -1,135 +1,95 @@
 /**
- * 对话列表：/chat — 使用 @xmtp/browser-sdk 列出 DM
+ * 对话列表：/chat — 中心化实时聊天，连接钱包后拉取会话列表，含演示用 Alex/Sam/Jade
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 import { NavBar } from '../components/layout/NavBar';
-import { useOptionalXmtpClient } from '../context/XmtpContext';
+import { useRealtimeChat } from '../context/RealtimeChatContext';
+
+function normalizeAddress(addr) {
+  if (!addr || typeof addr !== 'string') return '';
+  return addr.toLowerCase().startsWith('0x') ? addr.toLowerCase() : addr.toLowerCase();
+}
 
 export function ChatListPage() {
   const navigate = useNavigate();
-  const { address, isConnected, status } = useAccount();
-  // 用 address 或 status 补充判断，避免 reconnecting 时误显示「请先连接钱包」
-  const walletConnected = isConnected || !!address || status === 'reconnecting';
-  const xmtp = useOptionalXmtpClient();
-  const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { myAddress, isReady, conversations, loadConversations, getPeerName, MOCK_PEERS } = useRealtimeChat();
+  const [list, setList] = useState([]);
 
   useEffect(() => {
-    if (!xmtp?.client) {
-      setConversations([]);
+    if (!isReady || !myAddress) {
+      setList(MOCK_PEERS.map((p) => ({ peerAddress: p.address, peerName: p.name, lastMessage: null, lastAt: null })));
       return;
     }
-    let cancelled = false;
-    setLoading(true);
-    (async () => {
-      try {
-        const { ConsentState } = await import('@xmtp/browser-sdk');
-        const list = await xmtp.client.conversations.listDms({
-          consentStates: ConsentState?.Allowed != null ? [ConsentState.Allowed] : ['allowed'],
-        });
-        if (!cancelled) setConversations(list ?? []);
-      } catch {
-        if (!cancelled) setConversations([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [xmtp?.client]);
+    loadConversations().then((convos) => {
+      const seen = new Set(convos.map((c) => normalizeAddress(c.peerAddress)));
+      const merged = [...convos.map((c) => ({ ...c, peerName: c.peerName || getPeerName(c.peerAddress) }))];
+      MOCK_PEERS.forEach((p) => {
+        if (seen.has(normalizeAddress(p.address))) return;
+        seen.add(normalizeAddress(p.address));
+        merged.push({ peerAddress: p.address, peerName: p.name, lastMessage: null, lastAt: null });
+      });
+      merged.sort((a, b) => (b.lastAt ? new Date(b.lastAt).getTime() : 0) - (a.lastAt ? new Date(a.lastAt).getTime() : 0));
+      setList(merged);
+    });
+  }, [isReady, myAddress, loadConversations, getPeerName, MOCK_PEERS]);
 
-  const peerAddress = (dm) => {
-    try {
-      const id = dm.peerAddress?.() ?? dm.peerAddress ?? dm.identifier?.identifier;
-      return id ?? '';
-    } catch {
-      return '';
-    }
-  };
-
-  const statusPill = xmtp?.isConnected
-    ? 'XMTP 对话列表'
-    : walletConnected
-      ? '正在准备 XMTP…'
-      : '连接钱包后显示';
+  const displayList = list.length > 0 ? list : MOCK_PEERS.map((p) => ({ peerAddress: p.address, peerName: p.name, lastMessage: null, lastAt: null }));
 
   return (
     <div className="min-h-screen text-white flex flex-col pb-20 chat-page-bg">
-      <header className="p-4 pt-safe chat-header-glow">
-        <h1 className="text-xl font-semibold text-white">聊天</h1>
-        <div className="mt-2">
-          <span
-            className={`chat-pill ${
-              xmtp?.isConnected ? 'chat-pill-ok' : walletConnected ? 'chat-pill-loading' : 'chat-pill-loading'
-            }`}
-          >
-            {xmtp?.isConnected && <span className="opacity-90">✨</span>}
-            {!xmtp?.isConnected && walletConnected && <span className="inline-block w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />}
-            {statusPill}
-          </span>
+      <header className="flex items-center gap-3 p-4 pt-safe chat-header-glow">
+        <button
+          type="button"
+          onClick={() => navigate('/map')}
+          className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xl transition-colors shrink-0"
+        >
+          ←
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-semibold text-white">Chat</h1>
+          <div className="mt-2">
+            {isReady ? (
+              <span className="chat-pill chat-pill-ok">
+                <span className="opacity-90">✨</span>
+                Real-time · Connected
+              </span>
+            ) : (
+              <span className="chat-pill chat-pill-loading">
+                Connect wallet to chat
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
-      {!walletConnected && (
+      {!isReady && (
         <div className="flex-1 p-6 text-white/70 text-sm max-w-sm">
-          <p>请先连接钱包，再在「聊天」或「Profile → 发消息」中与对方发起对话。</p>
+          <p>Connect your wallet first. After connecting, you can send and receive messages in real time with others at the hackathon.</p>
         </div>
       )}
 
-      {walletConnected && !xmtp?.isConnected && (
-        <div className="flex-1 p-6 text-white/70 text-sm space-y-3 flex flex-col items-center justify-center">
-          <div className="chat-pill chat-pill-loading mb-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
-            正在准备 XMTP…
-          </div>
-          {xmtp?.isLoading && <p>正在初始化 XMTP…</p>}
-          {xmtp?.error && (
-            <>
-              <p className="text-rose-300/90">聊天初始化失败：{xmtp.error}</p>
-              <p className="text-white/40 text-xs">可尝试刷新页面或断开钱包后重新连接。</p>
-            </>
-          )}
-          {!xmtp?.error && !xmtp?.isLoading && <p className="text-white/50">请稍候…</p>}
-        </div>
-      )}
-
-      {walletConnected && xmtp?.isConnected && loading && (
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <span className="chat-pill chat-pill-loading">加载对话中…</span>
-        </div>
-      )}
-
-      {walletConnected && xmtp?.isConnected && !loading && conversations.length === 0 && (
-        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
-          <p className="text-4xl mb-3">🍄</p>
-          <p className="text-white/70 text-sm">暂无对话</p>
-          <p className="text-white/45 text-xs mt-1">从地图或 Profile 点「发消息」发起聊天</p>
-        </div>
-      )}
-
-      {walletConnected && xmtp?.isConnected && !loading && conversations.length > 0 && (
+      {isReady && (
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {conversations.map((dm) => {
-            const addr = peerAddress(dm);
-            return (
-              <button
-                key={addr || Math.random()}
-                type="button"
-                onClick={() => navigate(`/chat/${addr}`)}
-                className="w-full flex items-center gap-3 p-4 chat-row-card text-left"
-              >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 flex items-center justify-center text-xl border border-white/10">
-                  🍄
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate text-white">{addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '未知'}</p>
-                  <p className="text-white/50 text-sm truncate">0x 地址 · 点击进入聊天</p>
-                </div>
-                <span className="text-white/30">→</span>
-              </button>
-            );
-          })}
+          {displayList.map((c) => (
+            <button
+              key={c.peerAddress}
+              type="button"
+              onClick={() => navigate(`/chat/${c.peerAddress}`)}
+              className="w-full flex items-center gap-3 p-4 chat-row-card text-left"
+            >
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 flex items-center justify-center text-xl border border-white/10">
+                🍄
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate text-white">{c.peerName}</p>
+                <p className="text-white/50 text-sm truncate">
+                  {c.lastMessage || 'Tap to say hi'}
+                </p>
+              </div>
+              <span className="text-white/30">→</span>
+            </button>
+          ))}
         </div>
       )}
 
