@@ -106,6 +106,12 @@ npm run dev:backend   # 后端运行在 http://localhost:5000
 
 可选环境变量（后端 `.env`）：`WEB3_BIO_API_KEY`、`ALCHEMY_API_KEY`、`TALLY_API_KEY`（见 `backend/.env.example`）。
 
+## 设计 & API 风格统一
+
+- **设计**：可爱 + 酷炫（Blink 风格）、3D 软胶感、果冻色调；动效见 `frontend/src/lib/motion.js`（Spring 300/20）。
+- **后端 API**：统一响应格式 `{ success, data? }` / `{ success: false, message }`，见 `backend/API.md`、`backend/src/utils/response.js`。
+- **路由与 PRD 对齐**：见 `docs/PRD-Routes-Design.md`。
+
 ## 开发进度
 
 - [x] 前端基础框架（React + Vite）
@@ -114,6 +120,7 @@ npm run dev:backend   # 后端运行在 http://localhost:5000
 - [x] PWA 配置（可添加到主屏幕）
 - [x] 钱包连接（RainbowKit + wagmi）
 - [x] Soul 身份画像（连接钱包后 Miner + Brain）
+- [x] 前后端风格统一（response 工具 + API 约定 + motion 常量）
 - [ ] 动态发布与社交互动
 
 ## License

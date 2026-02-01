@@ -12,6 +12,7 @@ const defaultProfile = () => ({
   avatarUrl: '', // 头像：本地 base64 或 URL
   email: '', // 邮箱注册（可选）
   ghostMode: false, // 幽灵模式：true = 地图上不显示我的位置
+  bio: '', // 个人简介：Tell us about yourself
 });
 
 function load() {
@@ -64,6 +65,10 @@ export function useProfileStore() {
     setProfile((p) => ({ ...p, ghostMode: Boolean(on) }));
   }, [setProfile]);
 
+  const setBio = useCallback((text) => {
+    setProfile((p) => ({ ...p, bio: String(text ?? '').trim() }));
+  }, [setProfile]);
+
   // Rehydrate from localStorage on mount and when tab becomes visible (e.g. after wallet connect or refresh)
   useEffect(() => {
     setProfileState(load());
@@ -88,11 +93,13 @@ export function useProfileStore() {
     avatarUrl: profile.avatarUrl,
     email: profile.email,
     ghostMode: profile.ghostMode,
+    bio: profile.bio,
     setProfile,
     setDisplayName,
     setGender,
     setAvatarUrl,
     setEmail,
     setGhostMode,
+    setBio,
   };
 }

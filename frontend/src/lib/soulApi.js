@@ -16,7 +16,8 @@ export async function fetchSoulByAddress(address) {
     const res = await fetch(url, { signal: ac.signal });
     clearTimeout(timeoutId);
     if (!res.ok) return null;
-    return res.json();
+    const json = await res.json();
+    return json?.success && json?.data != null ? json.data : json;
   } catch (e) {
     clearTimeout(timeoutId);
     if (e?.name === 'AbortError') return null;

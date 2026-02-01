@@ -51,15 +51,6 @@ export const DEMO_MUSHI_USERS: MushiProfile[] = [
   },
 ];
 
-// Random positions around Chiang Mai for demo
-const MUSHI_POSITIONS: { [key: string]: [number, number] } = {
-  'mushi-1': [98.9850, 18.7900],
-  'mushi-2': [98.9780, 18.7860],
-  'mushi-3': [98.9900, 18.7920],
-  'mushi-4': [98.9750, 18.7840],
-  'mushi-5': [98.9870, 18.7830],
-};
-
 // Soul type colors for markers
 const SOUL_MARKER_COLORS: Record<string, string> = {
   degen: '#9945FF',
@@ -71,9 +62,17 @@ const SOUL_MARKER_COLORS: Record<string, string> = {
   default: '#A3FF12',
 };
 
+export const MUSHI_POSITIONS: { [key: string]: [number, number] } = {
+  'mushi-1': [98.9850, 18.7900],
+  'mushi-2': [98.9780, 18.7860],
+  'mushi-3': [98.9900, 18.7920],
+  'mushi-4': [98.9750, 18.7840],
+  'mushi-5': [98.9870, 18.7830],
+};
+
 interface MushiUserMarkersProps {
   map: mapboxgl.Map | null;
-  onMushiClick?: (profile: MushiProfile) => void;
+  onMushiClick?: (profile: MushiProfile, position: [number, number]) => void;
 }
 
 const MushiUserMarkers = ({ map, onMushiClick }: MushiUserMarkersProps) => {
@@ -110,7 +109,7 @@ const MushiUserMarkers = ({ map, onMushiClick }: MushiUserMarkersProps) => {
       const openProfile = (e: Event) => {
         e.stopPropagation();
         e.preventDefault();
-        onMushiClick?.(mushi);
+        onMushiClick?.(mushi, position);
       };
       el.addEventListener('click', openProfile);
       el.addEventListener('touchend', openProfile, { passive: false });

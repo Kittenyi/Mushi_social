@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { UsersRound, Activity, Star, MapPin } from 'lucide-react';
 import { NavBar } from '../components/layout/NavBar';
 import { fetchSoulByAddress } from '../lib/soulApi';
 import { useProfileStore } from '../stores/useProfileStore';
@@ -46,14 +47,22 @@ export function SettingsPage() {
     avatarUrl,
     email,
     ghostMode,
+    bio,
     setDisplayName,
     setGender,
     setAvatarUrl,
     setGhostMode,
+    setBio,
   } = useProfileStore();
   const [editName, setEditName] = useState(displayName);
   const [showEdit, setShowEdit] = useState(false);
+  const [editingBio, setEditingBio] = useState(false);
+  const [editBio, setEditBio] = useState(bio);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    setEditBio(bio);
+  }, [bio]);
 
   useEffect(() => {
     setEditName(displayName);
@@ -95,26 +104,35 @@ export function SettingsPage() {
         <div className="w-10" />
         <span className="profile-app-pill">MUSHI</span>
         <div className="flex items-center gap-2">
-          <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Theme">🎨</button>
-          <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Edit" onClick={() => setShowEdit((v) => !v)}>✏️</button>
+          <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Edit profile" onClick={() => setShowEdit((v) => !v)} aria-label="Edit profile">✏️</button>
         </div>
       </header>
 
       <div className="profile-hero flex-1 flex flex-col items-center px-6 pt-2 pb-6">
-        {/* 大头像：圆角方 + 发光，可点击换图 */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="profile-avatar-wrap mb-3"
-        >
-          <div className="profile-avatar overflow-hidden">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-5xl">🍄</span>
-            )}
-          </div>
-        </button>
+        {/* 头像：缩小比例，笔图标放在图像右下角 */}
+        <div className="flex items-center justify-center mb-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-24 h-24 rounded-2xl overflow-hidden ring-2 ring-white/20 shadow-lg hover:ring-white/30 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            title="修改头像"
+            aria-label="修改头像"
+          >
+            <div className="w-full h-full overflow-hidden bg-white/5 flex items-center justify-center">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-4xl">🍄</span>
+              )}
+            </div>
+            <span
+              className="absolute right-0 bottom-0 w-8 h-8 rounded-tl-lg flex items-center justify-center text-sm bg-black/50 text-white/90 hover:bg-black/60"
+              aria-hidden
+            >
+              ✏️
+            </span>
+          </button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -158,11 +176,46 @@ export function SettingsPage() {
         </div>
         {email && <p className="text-white/40 text-xs mb-2">Email linked</p>}
 
-        {/* Bio CTA */}
-        <button type="button" className="profile-bio-cta w-full max-w-sm mt-2 mb-4">
-          <span className="opacity-70">✏️</span>
-          <span className="text-white/50">Tell us about yourself</span>
-        </button>
+        {/* Bio: click to edit, save to profile */}
+        {editingBio ? (
+          <div className="w-full max-w-sm mt-2 mb-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <textarea
+              value={editBio}
+              onChange={(e) => setEditBio(e.target.value)}
+              placeholder="Tell us about yourself"
+              className="w-full min-h-[80px] bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-white/40 text-sm resize-y focus:outline-none focus:border-white/20"
+              maxLength={200}
+              autoFocus
+            />
+            <div className="flex gap-2 mt-3">
+              <button
+                type="button"
+                onClick={() => { setBio(editBio); setEditingBio(false); }}
+                className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEditBio(bio); setEditingBio(false); }}
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditingBio(true)}
+            className="profile-bio-cta w-full max-w-sm mt-2 mb-4 text-left px-4 py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors"
+          >
+            <span className="opacity-70 mr-2">✏️</span>
+            <span className={bio ? 'text-white/80' : 'text-white/50'}>
+              {bio || 'Tell us about yourself'}
+            </span>
+          </button>
+        )}
 
         {/* 编辑资料展开 */}
         {showEdit && (
@@ -204,23 +257,23 @@ export function SettingsPage() {
           </div>
         )}
 
-        {/* 2x2 可爱功能区 */}
+        {/* 2x2 功能区：Lucide 图标 */}
         <div className="profile-grid w-full max-w-sm grid grid-cols-2 gap-4 mb-6">
-          <button type="button" className="profile-grid-item">
-            <div className="profile-grid-icon profile-grid-friends">👥</div>
-            <span>Friends</span>
+          <button type="button" className="profile-grid-item flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors text-white/90">
+            <UsersRound className="w-7 h-7 shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium">Friends</span>
           </button>
-          <button type="button" className="profile-grid-item">
-            <div className="profile-grid-icon profile-grid-number">0</div>
-            <span>Activity</span>
+          <button type="button" className="profile-grid-item flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors text-white/90">
+            <span className="text-2xl font-semibold">0</span>
+            <span className="text-sm font-medium">Activity</span>
           </button>
-          <button type="button" className="profile-grid-item">
-            <div className="profile-grid-icon profile-grid-star">⭐</div>
-            <span>Achievements</span>
+          <button type="button" className="profile-grid-item flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors text-white/90">
+            <Star className="w-7 h-7 shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium">Achievements</span>
           </button>
-          <button type="button" className="profile-grid-item">
-            <div className="profile-grid-icon profile-grid-check">📍</div>
-            <span>Check-in</span>
+          <button type="button" className="profile-grid-item flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors text-white/90">
+            <MapPin className="w-7 h-7 shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium">Check-in</span>
           </button>
         </div>
 

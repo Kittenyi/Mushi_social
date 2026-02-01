@@ -32,10 +32,10 @@ export function ChatDetailPage() {
   const handleSend = async () => {
     if (!input.trim() || !peerAddress || !isReady || sending) return;
     const text = input.trim();
-    setInput('');
     setSending(true);
     try {
       await sendMessage(peerAddress, text);
+      setInput('');
       inputRef.current?.focus();
     } catch (e) {
       console.error('Send failed', e);

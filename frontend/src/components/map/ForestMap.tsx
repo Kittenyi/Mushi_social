@@ -27,6 +27,8 @@ interface ForestMapProps {
   onMapReady?: (map: mapboxgl.Map) => void;
   /** true = 真实街道图（Mapbox Streets）；false = 深色森林风格 */
   realMap?: boolean;
+  /** true = 夜间版本（深色地图） */
+  nightMode?: boolean;
 }
 
 const ForestMap = ({
@@ -36,12 +38,13 @@ const ForestMap = ({
   initialZoom = 14,
   onMapReady,
   realMap = true,
+  nightMode = false,
 }: ForestMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const pulseAnimationRef = useRef<number | null>(null);
   const isInitialized = useRef(false);
-  const styleUrl = realMap ? STREETS_STYLE : DARK_STYLE;
+  const styleUrl = nightMode ? DARK_STYLE : (realMap ? STREETS_STYLE : DARK_STYLE);
 
   const handleZoomChange = useCallback(() => {
     if (map.current && onZoomChange) {
@@ -58,8 +61,8 @@ const ForestMap = ({
       style: styleUrl,
       center: initialCenter,
       zoom: initialZoom,
-      pitch: realMap ? 0 : 45,
-      bearing: realMap ? 0 : -17.6,
+      pitch: (realMap || nightMode) ? 0 : 45,
+      bearing: (realMap || nightMode) ? 0 : -17.6,
       antialias: true,
       projection: 'mercator',
       fadeDuration: 0,

@@ -1,11 +1,14 @@
 /**
- * Mushiverse-style onboarding: 3D mushroom scan → /onboarding/result
+ * Onboarding：用真实钱包地址请求 Soul API，分析链上身份 → /onboarding/result
+ * 不再使用随机 mock，必须已连接钱包（由 OnboardingEntryPage 保证）
  */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import MushroomScene from '@/components/3d/MushroomModel';
-import { scanWallet } from '@/lib/mockData';
+import { soulToDisplay } from '@/lib/mockData';
+import { fetchSoulByAddress } from '@/lib/soulApi';
 import { Progress } from '@/components/ui/progress';
 
 const containerVariants = {
@@ -27,35 +30,44 @@ const itemVariants = {
 
 export function OnboardingScanPage() {
   const navigate = useNavigate();
+  const { address } = useAccount();
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanResult, setScanResult] = useState(null);
 
   const handleEnter = async () => {
+    if (!address) return;
     setIsScanning(true);
     setScanProgress(0);
     const progressInterval = setInterval(() => {
       setScanProgress((prev) => {
-        if (prev >= 95) {
+        if (prev >= 90) {
           clearInterval(progressInterval);
-          return 95;
+          return 90;
         }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 12;
       });
     }, 200);
 
     try {
-      const result = await scanWallet();
+      const soulData = await fetchSoulByAddress(address);
       clearInterval(progressInterval);
       setScanProgress(100);
+      const result = soulToDisplay(soulData);
       setScanResult(result);
       setTimeout(() => {
         navigate('/onboarding/result', { state: { scanResult: result } });
-      }, 1500);
+      }, 1200);
     } catch (error) {
       clearInterval(progressInterval);
+      const result = soulToDisplay(null);
+      setScanResult(result);
+      setScanProgress(100);
+      setTimeout(() => {
+        navigate('/onboarding/result', { state: { scanResult: result } });
+      }, 1200);
+    } finally {
       setIsScanning(false);
-      setScanProgress(0);
     }
   };
 
@@ -105,17 +117,18 @@ export function OnboardingScanPage() {
           <AnimatePresence mode="wait">
             {!isScanning && !scanResult && (
               <motion.button
-                key="connect"
+                key="scan"
                 onClick={handleEnter}
-                className="group relative text-primary text-base tracking-[0.25em] font-serif font-light"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={!address}
+                className="group relative text-primary text-base tracking-[0.25em] font-serif font-light disabled:opacity-50"
+                whileHover={{ scale: address ? 1.02 : 1 }}
+                whileTap={{ scale: address ? 0.98 : 1 }}
                 transition={{ duration: 0.2 }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <span className="relative z-10">Connect Wallet</span>
+                <span className="relative z-10">{address ? 'Discover my Soul' : 'Connect wallet first'}</span>
                 <motion.div
                   className="absolute -bottom-1 left-0 right-0 h-px bg-primary/50"
                   initial={{ scaleX: 0.3, opacity: 0.3 }}
@@ -142,7 +155,7 @@ export function OnboardingScanPage() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 <p className="text-muted-foreground/80 text-sm tracking-[0.2em] uppercase font-sans">
-                  Scanning Wallet...
+                  Analyzing your wallet...
                 </p>
                 <div className="w-48">
                   <Progress value={scanProgress} className="h-1 bg-muted/30" />

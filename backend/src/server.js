@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server as SocketServer } from 'socket.io';
 import connectDB from './config/db.js';
+import { ok, err } from './utils/response.js';
 import chatRoutes, { setChatIo } from './routes/chat.js';
 
 // Load env vars
@@ -50,17 +51,18 @@ app.use('/api/x402', x402Routes);
 app.use('/api/soul', soulRoutes);
 app.use('/api/chat', chatRoutes);
 
-// Health check
+// Health check（统一格式）
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Mushi Social API is running' });
+  ok(res, { status: 'OK', message: 'Mushi Social API is running' });
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
+// Error handler（统一格式）
+app.use((e, req, res, next) => {
+  console.error(e.stack);
+  const status = e.status ?? 500;
+  res.status(status).json({
     success: false,
-    message: err.message || 'Server Error'
+    message: e.message || 'Server Error',
   });
 });
 

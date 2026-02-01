@@ -7,7 +7,7 @@ import { RealtimeChatProvider } from './context/RealtimeChatContext';
 import { createEoaSigner } from './lib/xmtpSigner';
 import { OnboardingGate } from './components/OnboardingGate';
 import { WelcomePage } from './pages/WelcomePage';
-import { OnboardingScanPage } from './pages/OnboardingScanPage';
+import { OnboardingEntryPage } from './pages/OnboardingEntryPage';
 import { OnboardingResultPage } from './pages/OnboardingResultPage';
 import { MapPage } from './pages/MapPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -62,7 +62,7 @@ function AppWithWallet() {
         <XmtpProvider signer={signer}>
           <Routes>
         <Route path="/" element={<WelcomePage />} />
-        <Route path="/onboarding" element={<OnboardingScanPage />} />
+        <Route path="/onboarding" element={<OnboardingEntryPage />} />
         <Route path="/onboarding/result" element={<OnboardingResultPage />} />
         <Route element={<OnboardingGate />}>
           <Route path="/map" element={<MapPage />} />

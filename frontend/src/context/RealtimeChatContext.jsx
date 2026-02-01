@@ -12,6 +12,7 @@ const MOCK_PEERS = [
   { address: '0x1111111111111111111111111111111111111111', name: 'Alex' },
   { address: '0x2222222222222222222222222222222222222222', name: 'Sam' },
   { address: '0x3333333333333333333333333333333333333333', name: 'Jade' },
+  { address: '0x5300000000000000000000000000000000000001', name: 'Sherry' },
 ];
 
 function normalizeAddress(addr) {

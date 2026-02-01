@@ -1,16 +1,39 @@
 /**
- * 好友列表页 - 底部仅两个入口之一；顶部可返回地图
+ * Friends list — shows Sam + accepted friends (e.g. Sherry after accepting request)
  */
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { UsersRound } from 'lucide-react';
 import { NavBar } from '../components/layout/NavBar';
+import { getAcceptedFriendIds, SHERRY_ID, SHERRY_FRIEND_ENTRY } from '../lib/friendsData';
 
-// 模拟好友（与地图 MOCK_NEARBY 中 isFriend: true 对应）
 const MOCK_FRIENDS = [
   { id: '2', address: '0x2222222222222222222222222222222222222222', name: 'Sam', status: 'Yellow Coworking', isFriend: true },
 ];
 
+const ACCEPTED_FRIEND_ENTRIES = { [SHERRY_ID]: SHERRY_FRIEND_ENTRY };
+
 export function FriendsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const acceptedIds = useMemo(() => getAcceptedFriendIds(), []);
+
+  const list = useMemo(() => {
+    const base = [...MOCK_FRIENDS];
+    acceptedIds.forEach((id) => {
+      if (ACCEPTED_FRIEND_ENTRIES[id] && !base.some((f) => f.id === id)) {
+        base.push(ACCEPTED_FRIEND_ENTRIES[id]);
+      }
+    });
+    return base;
+  }, [acceptedIds]);
+
+  useEffect(() => {
+    const state = location.state;
+    if (state?.openChatFor === SHERRY_ID && state?.peerAddress) {
+      navigate(`/chat/${state.peerAddress}`, { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-nav">
@@ -28,15 +51,15 @@ export function FriendsPage() {
       </header>
 
       <div className="flex-1 p-4">
-        {MOCK_FRIENDS.length === 0 ? (
+        {list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-4xl mb-3">👥</p>
+            <UsersRound className="w-14 h-14 text-white/40 mb-3 shrink-0" strokeWidth={1.5} />
             <p className="text-white/70 text-sm">No friends yet</p>
             <p className="text-white/45 text-xs mt-1">Add people you meet on the map as friends</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {MOCK_FRIENDS.map((f) => (
+            {list.map((f) => (
               <Link
                 key={f.id}
                 to={`/profile/${f.id}`}

@@ -5,6 +5,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import MushroomScene from '@/components/3d/MushroomModel';
 import { Input } from '@/components/ui/input';
 import { Check, Sparkles, User, Users, EyeOff } from 'lucide-react';
@@ -72,6 +73,7 @@ const defaultResult = {
 export function OnboardingResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isConnected } = useAccount();
   const { setDisplayName } = useProfileStore();
   const scanResult = location.state?.scanResult;
   const result = scanResult || defaultResult;
@@ -106,8 +108,13 @@ export function OnboardingResultPage() {
   };
 
   const handleExplosionComplete = () => {
-    setOnboardingDone();
     setDisplayName(nickname.trim());
+    if (!isConnected) {
+      // 未连接真实钱包则先跳转欢迎页连接，不设置 onboarding done
+      navigate('/', { replace: true });
+      return;
+    }
+    setOnboardingDone();
     setIsExiting(true);
     setTimeout(() => {
       navigate('/map', {
