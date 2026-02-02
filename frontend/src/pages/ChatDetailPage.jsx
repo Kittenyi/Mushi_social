@@ -1,7 +1,7 @@
 /**
  * 聊天详情：/chat/:id — 中心化实时聊天，连接钱包后收发消息，新消息通过 Socket 推送
  */
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 import { NavBar } from '../components/layout/NavBar';
 import { useRealtimeChat } from '../context/RealtimeChatContext';
@@ -9,6 +9,7 @@ import { useRealtimeChat } from '../context/RealtimeChatContext';
 export function ChatDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const [input, setInput] = useState('');
@@ -18,7 +19,7 @@ export function ChatDetailPage() {
   const { myAddress, isReady, getMessagesForPeer, loadMessages, sendMessage, getPeerName } = useRealtimeChat();
 
   const messages = getMessagesForPeer(peerAddress);
-  const peerName = getPeerName(peerAddress);
+  const peerName = location.state?.peerName || getPeerName(peerAddress);
 
   useEffect(() => {
     if (!peerAddress || !isReady) return;
@@ -59,15 +60,14 @@ export function ChatDetailPage() {
           🍄
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="mb-0 text-2xl font-bold truncate">{peerName}</h1>
-          <p className="text-xl text-muted-foreground">{isReady ? 'Real-time' : 'Connect wallet'}</p>
+          <h1 className="mb-0 text-2xl font-serif font-light tracking-tight truncate text-foreground">{peerName}</h1>
         </div>
       </header>
 
       <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {!isReady && (
           <div className="text-center">
-            <h2 className="mb-4 text-4xl font-bold">Connect wallet</h2>
+            <h2 className="mb-4 text-4xl font-bold">Connect Wallet</h2>
             <p className="text-xl text-muted-foreground">Connect your wallet to send and receive messages here.</p>
           </div>
         )}

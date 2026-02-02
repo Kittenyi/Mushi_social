@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import MushroomScene from '@/components/3d/MushroomModel';
+import { SceneErrorBoundary } from '@/components/SceneErrorBoundary';
 import { Input } from '@/components/ui/input';
 import { Check, Sparkles, User, Users, EyeOff } from 'lucide-react';
 import { setOnboardingDone } from '@/lib/onboarding';
@@ -141,19 +142,21 @@ export function OnboardingResultPage() {
           animate="visible"
         >
           <div className="absolute inset-0 z-0">
-            <MushroomScene
-              className="w-full h-full"
-              showParticleField={true}
-              showMycelium={false}
-              color={dynamicColor}
-              secondaryColor={result.secondaryColor}
-              glowColor={result.glowColor}
-              showOrbitalRing={isWhale}
-              morphFactor={morphFactor}
-              companionColors={companionColors}
-              triggerExplosion={triggerExplosion}
+            <SceneErrorBoundary>
+              <MushroomScene
+                className="w-full h-full"
+                showParticleField={true}
+                showMycelium={false}
+                color={dynamicColor}
+                secondaryColor={result.secondaryColor}
+                glowColor={result.glowColor}
+                showOrbitalRing={isWhale}
+                morphFactor={morphFactor}
+                companionColors={companionColors}
+                triggerExplosion={triggerExplosion}
               onExplosionComplete={handleExplosionComplete}
             />
+            </SceneErrorBoundary>
           </div>
 
           <div className="relative z-10 w-full max-w-2xl px-6 py-8 overflow-y-auto">

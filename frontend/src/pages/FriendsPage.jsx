@@ -46,8 +46,7 @@ export function FriendsPage() {
         >
           ←
         </button>
-        <h1 className="flex-1 mb-0 text-4xl font-bold">Friends</h1>
-        <p className="text-xl text-muted-foreground">Map</p>
+        <h1 className="flex-1 mb-0 text-4xl font-serif font-light tracking-tight text-foreground">Friends</h1>
       </header>
 
       <div className="flex-1 p-4">

@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useRef, useEffect, useState, useCallback, createContext, useContext } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer } from '@react-three/postprocessing';
 import { Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
@@ -25,6 +25,28 @@ const FloatingGroup = ({ children }: FloatingGroupProps) => {
 
   return <group ref={groupRef}>{children}</group>;
 };
+
+/** WebGL context-lost 保护：阻止事件冒泡，避免整页假死；通知父级切换静态背景 */
+const OnContextLostContext = createContext<(() => void) | null>(null);
+
+function WebGLContextGuard() {
+  const { gl } = useThree();
+  const onContextLost = useContext(OnContextLostContext);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handler = (e: Event) => {
+      e.preventDefault();
+      if (typeof (e as WebGLContextEvent).preventDefault === 'function') (e as WebGLContextEvent).preventDefault();
+      console.warn('[MushroomScene] WebGL context lost, switching to static background.');
+      onContextLost?.();
+    };
+    canvas.addEventListener('webglcontextlost', handler, false);
+    return () => canvas.removeEventListener('webglcontextlost', handler);
+  }, [gl, onContextLost]);
+
+  return null;
+}
 
 interface MushroomSceneProps {
   className?: string;
@@ -53,6 +75,21 @@ const MushroomScene = ({
   triggerExplosion = false,
   onExplosionComplete,
 }: MushroomSceneProps) => {
+  const [contextLost, setContextLost] = useState(false);
+  const onContextLost = useCallback(() => setContextLost(true), []);
+
+  if (contextLost) {
+    return (
+      <div
+        className={className}
+        style={{
+          background: `linear-gradient(165deg, #0f0f1a 0%, #1a1a2e 40%, #16213e 100%)`,
+        }}
+        aria-hidden
+      />
+    );
+  }
+
   return (
     <div className={className}>
       <Canvas
@@ -64,6 +101,9 @@ const MushroomScene = ({
           powerPreference: 'high-performance',
         }}
       >
+        <OnContextLostContext.Provider value={onContextLost}>
+          <WebGLContextGuard />
+        </OnContextLostContext.Provider>
         {/* Minimal lighting */}
         <ambientLight intensity={0.3} />
         <pointLight position={[3, 3, 3]} intensity={0.5} color={color} />

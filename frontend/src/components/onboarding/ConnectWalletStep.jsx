@@ -4,7 +4,7 @@
  */
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { OnboardingShell } from './OnboardingShell';
 
@@ -14,7 +14,6 @@ const AUTO_ADVANCE_DELAY_MS = 1200;
 export function ConnectWalletStep({ onConnectedNext }) {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { openConnectModal } = useConnectModal();
 
   useEffect(() => {
     if (!isConnected) return;
@@ -26,28 +25,24 @@ export function ConnectWalletStep({ onConnectedNext }) {
     return () => clearTimeout(t);
   }, [isConnected, navigate, onConnectedNext]);
 
-  // 进入此步时自动打开钱包选择弹窗，直接跳转到 MetaMask/OKX/BN 选择
-  useEffect(() => {
-    if (isConnected || !openConnectModal) return;
-    const t = setTimeout(openConnectModal, 400);
-    return () => clearTimeout(t);
-  }, [isConnected, openConnectModal]);
-
+  // 不再自动打开弹窗：连接弹窗仅在首页绿色「Connect Wallet」点击时弹出
   return (
     <OnboardingShell step={2}>
       <div className="flex-1 flex flex-col px-6 pt-4 pb-8 animate-fade-in-up">
-        <h2 className="text-2xl font-semibold text-white mb-1">连接钱包</h2>
-        <p className="text-white/50 text-sm mb-6">弹窗已打开，选择 MetaMask、OKX 或 BN Wallet 即可跳转到对应扩展完成连接</p>
+        <h2 className="text-2xl font-semibold text-white mb-1">Connect Wallet</h2>
+        <p className="text-white/50 text-sm mb-6">The pop-up is open — choose MetaMask, OKX or BN Wallet to complete connection in the extension.</p>
         <div className="flex flex-col items-center gap-6 mb-10">
-          {openConnectModal ? (
-            <button
-              type="button"
-              onClick={openConnectModal}
-              className="w-full max-w-xs px-6 py-4 rounded-xl bg-[#F6851B] hover:bg-[#E2761B] text-white font-semibold text-base"
-            >
-              打开 MetaMask / OKX / BN Wallet
-            </button>
-          ) : null}
+          <ConnectButton.Custom>
+            {({ openConnectModal: openModal }) => (
+              <button
+                type="button"
+                onClick={openModal}
+                className="cursor-pointer w-full max-w-xs px-6 py-4 rounded-xl bg-[#F6851B] hover:bg-[#E2761B] text-white font-semibold text-base"
+              >
+                Open MetaMask / OKX / BN Wallet
+              </button>
+            )}
+          </ConnectButton.Custom>
           <ConnectButton />
           {isConnected && (
             <p className="text-emerald-400/90 text-sm">Connected — taking you to the next step…</p>

@@ -8,7 +8,9 @@
     "dev:backend": "cd backend && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build"
+    "build:backend": "cd backend && npm run build",
+    "deploy:sepolia": "forge script script/Deploy.s.sol:DeployMushiRegistry --rpc-url $ETH_RPC_URL --broadcast",
+    "deploy:sepolia:verify": "forge script script/Deploy.s.sol:DeployMushiRegistry --rpc-url $ETH_RPC_URL --broadcast --verify"
   },
   "keywords": ["social", "media", "fullstack"],
   "author": "",

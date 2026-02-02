@@ -300,7 +300,30 @@
   font-size: 1.15rem;
 }
 .nav-bar-label {
-  font-weight: 500;
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Welcome 页 Connect Wallet：原生按钮，点击打开 RainbowKit 连接弹窗 */
+.welcome-connect-btn {
+  cursor: pointer !important;
+  padding: 1rem 2rem !important;
+  border-radius: 1rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #0a0a12 !important;
+  border: none !important;
+  background: linear-gradient(135deg, #A3FF12 0%, #7dd321 100%) !important;
+  box-shadow: 0 0 32px rgba(163, 255, 18, 0.35), 0 0 64px rgba(163, 255, 18, 0.15) !important;
+  transition: opacity 0.2s, transform 0.1s !important;
+  pointer-events: auto !important;
+}
+.welcome-connect-btn:hover {
+  opacity: 0.95 !important;
+}
+.welcome-connect-btn:active {
+  transform: scale(0.98) !important;
 }
 
 /* Map: only canvas receives drag/zoom; markers receive click (single source of truth) */

@@ -1,6 +1,6 @@
 /**
  * Onboarding 步骤 1: 欢迎页
- * Mushi Logo + 3D 蘑菇动画展示 + Connect wallet（弹性点击）
+ * Mushi Logo + 3D 蘑菇动画展示 + Connect Wallet（弹性点击）
  */
 import { useNavigate } from 'react-router-dom';
 import { OnboardingShell } from './OnboardingShell';
@@ -38,7 +38,7 @@ export function WelcomeStep() {
           onClick={() => navigate('/onboarding/wallet')}
           className="btn-primary btn-elastic"
         >
-          Connect wallet
+          Connect Wallet
         </button>
       </div>
     </OnboardingShell>

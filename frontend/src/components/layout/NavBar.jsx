@@ -30,7 +30,7 @@ export function NavBar() {
             <span className="nav-bar-icon shrink-0" aria-hidden>
               <Icon className="w-5 h-5" strokeWidth={2} />
             </span>
-            <span className="nav-bar-label">{label}</span>
+            <span className="nav-bar-label font-serif font-light tracking-tight">{label}</span>
           </NavLink>
         ))}
       </nav>

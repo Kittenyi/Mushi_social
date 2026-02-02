@@ -48,10 +48,7 @@ export function ChatListPage() {
           ←
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="mb-4 text-4xl font-bold">Chat</h1>
-          <p className="text-xl text-muted-foreground">
-            {isReady ? 'Real-time · Connected' : 'Connect wallet to chat'}
-          </p>
+          <h1 className="text-4xl font-serif font-light tracking-tight text-foreground">Chat</h1>
         </div>
       </header>
 

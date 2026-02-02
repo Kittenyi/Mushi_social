@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { UsersRound, Activity, Star, MapPin } from 'lucide-react';
+import { UsersRound, Activity, Star, MapPin, ArrowLeft } from 'lucide-react';
 import { fetchSoulByAddress } from '../lib/soulApi';
 import { useProfileStore } from '../stores/useProfileStore';
 import { clearOnboardingDone } from '../lib/onboarding';
@@ -58,6 +58,7 @@ export function SettingsPage() {
   const [editingBio, setEditingBio] = useState(false);
   const [editBio, setEditBio] = useState(bio);
   const fileInputRef = useRef(null);
+  const touchStartX = useRef(0);
 
   useEffect(() => {
     setEditBio(bio);
@@ -96,20 +97,36 @@ export function SettingsPage() {
   const name = (displayName || '').trim() || 'Set your name';
   const genderOption = GENDER_OPTIONS.find((o) => o.id === gender);
 
+  const handleSwipeLeft = (e) => {
+    const dx = touchStartX.current - e.changedTouches?.[0]?.clientX;
+    if (dx > 60) navigate('/map');
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-background profile-page pb-safe">
-      {/* 顶部：标题、MUSHI pill（点击回地图）、主题/编辑；此页不显示底部导航，避免遮挡 2x2 网格 */}
+    <div
+      className="flex min-h-screen flex-col bg-background profile-page pb-safe"
+      onTouchStart={(e) => { touchStartX.current = e.touches?.[0]?.clientX ?? 0; }}
+      onTouchEnd={handleSwipeLeft}
+    >
+      {/* 顶部：左上角返回箭头、MUSHI pill（点击回地图）、主题/编辑；向左滑回地图 */}
       <header className="flex items-center justify-between p-4 pt-safe">
-        <div className="w-10" />
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-white/90 hover:bg-white/10 active:opacity-80"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={2} />
+        </button>
         <button
           type="button"
           onClick={() => navigate('/map')}
-          className="profile-app-pill cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
+          className="profile-app-pill font-serif font-light tracking-tight cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
           aria-label="Back to map"
         >
           MUSHI
         </button>
-        <div className="flex items-center gap-2">
+        <div className="w-10 flex items-center justify-end gap-2">
           <button type="button" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-lg" title="Edit profile" onClick={() => setShowEdit((v) => !v)} aria-label="Edit profile">✏️</button>
         </div>
       </header>
@@ -310,7 +327,19 @@ export function SettingsPage() {
             {isConnected && address ? (
               <>
                 <p className="text-white/50 text-xs font-mono truncate mb-2">{address}</p>
-                <button type="button" onClick={() => disconnect()} className="text-red-400 hover:text-red-300 text-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearOnboardingDone();
+                    try {
+                      sessionStorage.removeItem('mushi_auth_signed');
+                    } catch {}
+                    disconnect();
+                    // 等 1 秒后主动导航到欢迎页，确保钱包断开完成
+                    setTimeout(() => navigate('/'), 1000);
+                  }}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
                   Disconnect
                 </button>
               </>
@@ -337,32 +366,11 @@ export function SettingsPage() {
             </button>
           </div>
 
-          <div className="px-4 py-3 border-b border-white/10">
+          <div className="px-4 py-3">
             <p className="text-white/80 font-medium text-sm">Share</p>
             <p className="text-white/45 text-xs mt-0.5">Share profile and location</p>
           </div>
-
-          <div className="px-4 py-3">
-            <p className="text-white/80 font-medium text-sm mb-1">Onboarding</p>
-            <p className="text-white/45 text-xs mb-2">Clear to see welcome screen again next time</p>
-            <button
-              type="button"
-              onClick={() => {
-                clearOnboardingDone();
-                navigate('/');
-              }}
-              className="text-violet-400 hover:text-violet-300 text-sm"
-            >
-              Clear onboarding
-            </button>
-          </div>
         </section>
-
-        {isConnected && tags.length === 0 && (
-          <p className="text-white/40 text-xs text-center max-w-sm mb-2">
-            Soul tags require backend. Use settings above until then.
-          </p>
-        )}
       </div>
 
       {/* 个人简介页不显示底部导航，避免遮挡 2x2 网格；点击顶部 MUSHI 返回地图 */}

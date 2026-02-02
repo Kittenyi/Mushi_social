@@ -12,6 +12,7 @@ import { NavBar } from '@/components/layout/NavBar';
 import { useProfileStore } from '@/stores/useProfileStore';
 import { useTheme } from '@/context/ThemeContext';
 import { addAcceptedFriend } from '@/lib/friendsData';
+import { MOCK_USERS } from '@/lib/profileData';
 import { MAPBOX_TOKEN, DEFAULT_CENTER } from '@/config/mapbox';
 
 const MUSHI_ID_TO_ADDRESS = {
@@ -92,8 +93,9 @@ export function MapPage() {
   }, [navigate]);
   const handleMessage = useCallback((profile) => {
     const address = MUSHI_ID_TO_ADDRESS[profile?.id] || profile?.id;
+    const peerName = MOCK_USERS[profile?.id]?.name || profile?.nickname || null;
     setSelectedMushi(null);
-    if (address) navigate(`/chat/${address}`);
+    if (address) navigate(`/chat/${address}`, { state: peerName ? { peerName } : undefined });
   }, [navigate]);
 
   // 用户一登陆：显示泰文「欢迎来到清迈」3s 后淡出消失（每 session 一次）

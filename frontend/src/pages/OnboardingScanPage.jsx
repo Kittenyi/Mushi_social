@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import MushroomScene from '@/components/3d/MushroomModel';
+import { SceneErrorBoundary } from '@/components/SceneErrorBoundary';
 import { soulToDisplay } from '@/lib/mockData';
 import { fetchSoulByAddress } from '@/lib/soulApi';
 import { Progress } from '@/components/ui/progress';
@@ -78,19 +79,22 @@ export function OnboardingScanPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <MushroomScene
-          className="w-full h-full"
-          showParticleField={true}
-          color={mushroomColor}
-          secondaryColor={mushroomSecondary}
-          glowColor={mushroomGlow}
-          showOrbitalRing={isWhale}
-        />
+      {/* 背景 3D 用错误边界包裹：WebGL/WASM 崩溃时回退静态背景，连接钱包按钮仍可用 */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <SceneErrorBoundary>
+          <MushroomScene
+            className="w-full h-full"
+            showParticleField={true}
+            color={mushroomColor}
+            secondaryColor={mushroomSecondary}
+            glowColor={mushroomGlow}
+            showOrbitalRing={isWhale}
+          />
+        </SceneErrorBoundary>
       </div>
 
       <motion.div
-        className="flex flex-col items-center max-w-lg w-full z-10 px-6"
+        className="relative flex flex-col items-center max-w-lg w-full z-10 px-6 pointer-events-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -117,26 +121,19 @@ export function OnboardingScanPage() {
           <AnimatePresence mode="wait">
             {!isScanning && !scanResult && (
               <motion.button
-                key="scan"
+                key="next"
+                type="button"
                 onClick={handleEnter}
-                disabled={!address}
-                className="group relative text-primary text-base tracking-[0.25em] font-serif font-light disabled:opacity-50"
-                whileHover={{ scale: address ? 1.02 : 1 }}
-                whileTap={{ scale: address ? 0.98 : 1 }}
+                className="group relative text-primary cursor-pointer flex flex-col items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <span className="relative z-10">{address ? 'Discover my Soul' : 'Connect wallet first'}</span>
                 <motion.div
-                  className="absolute -bottom-1 left-0 right-0 h-px bg-primary/50"
-                  initial={{ scaleX: 0.3, opacity: 0.3 }}
-                  whileHover={{ scaleX: 1, opacity: 1 }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                />
-                <motion.div
-                  className="flex justify-center mt-6 opacity-50"
+                  className="flex justify-center opacity-50"
                   animate={{ y: [0, 6, 0] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 >
